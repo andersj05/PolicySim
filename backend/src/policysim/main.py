@@ -41,7 +41,12 @@ def provider_status() -> ProviderStatus:
 
 @app.get("/api/v1/countries", response_model=list[Country])
 def countries() -> list[Country]:
-    return providers.countries()
+    try:
+        return providers.countries()
+    except (KeyError, TypeError, ValueError):
+        raise DataError(
+            "World Bank returned unexpected geography metadata. Please retry."
+        ) from None
 
 
 @app.get("/api/v1/series", response_model=SearchResult)

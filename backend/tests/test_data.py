@@ -52,7 +52,10 @@ def mock_fetch(monkeypatch: pytest.MonkeyPatch, payloads: list[Any]) -> list[dic
 
 
 def wb(rows: list[dict[str, Any]] | None, pages: int = 1, total: int | None = None) -> list[Any]:
-    return [{"pages": pages, "total": len(rows or []) if total is None else total}, rows]
+    return [
+        {"sourceid": "2", "pages": pages, "total": len(rows or []) if total is None else total},
+        rows,
+    ]
 
 
 def test_fred_pagination_nulls_and_immutable_snapshot(
@@ -96,7 +99,24 @@ def test_worldbank_metadata_and_sorted_nulls(monkeypatch: pytest.MonkeyPatch) ->
     assert result.series.source_id == "2" and result.country == "USA"
     assert [row.date for row in result.observations] == ["2020", "2022"]
     assert result.observations[-1].value is None
-    assert calls[-1]["date"] == "2020:2022"
+    assert "date" not in calls[-1] and "source" not in calls[-1]
+    assert result.requested_start == "2020-06-01"
+    assert result.requested_end == "2022-06-01"
+
+
+def test_worldbank_validates_database_and_filters_years(monkeypatch: pytest.MonkeyPatch) -> None:
+    metadata = {**WB_SERIES, "source": {"id": "3", "value": "Another database"}}
+    mock_fetch(monkeypatch, [wb([metadata]), wb([])])
+    with pytest.raises(DataError, match="different database"):
+        providers.load("worldbank", "TEST.ID", "USA", "3", "2020-01-01", "2022-01-01")
+    payload = wb(
+        [{"date": "2019", "value": 9}, {"date": "2020", "value": 1}, {"date": "2023", "value": 2}]
+    )
+    payload[0]["sourceid"] = "3"
+    calls = mock_fetch(monkeypatch, [wb([metadata]), payload])
+    result = providers.load("worldbank", "TEST.ID", "USA", "3", "2020-01-01", "2022-01-01")
+    assert calls[-1]["source"] == "3"
+    assert [row.date for row in result.observations] == ["2020"]
 
 
 def test_catalog_pagination_search_cache_and_source_identity(

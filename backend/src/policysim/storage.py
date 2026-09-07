@@ -1,6 +1,8 @@
 """Immutable raw response objects and self-contained normalized manifests."""
 
 import hashlib
+import os
+import tempfile
 from pathlib import Path
 
 from policysim.domain import DataError, Snapshot
@@ -10,12 +12,18 @@ def put(root: Path, content: bytes, folder: str) -> str:
     digest = hashlib.sha256(content).hexdigest()
     destination = root / folder / f"{digest}.json"
     destination.parent.mkdir(parents=True, exist_ok=True)
+    # Publish only complete objects. Concurrent readers cannot see a partial write.
+    with tempfile.NamedTemporaryFile(dir=destination.parent, delete=False) as stream:
+        temporary = Path(stream.name)
+        stream.write(content)
     try:
-        with destination.open("xb") as stream:
-            stream.write(content)
-    except FileExistsError:
-        if destination.read_bytes() != content:
-            raise DataError("A local snapshot failed its integrity check.", 500) from None
+        try:
+            os.link(temporary, destination)
+        except FileExistsError:
+            if destination.read_bytes() != content:
+                raise DataError("A local snapshot failed its integrity check.", 500) from None
+    finally:
+        temporary.unlink()
     return digest
 
 

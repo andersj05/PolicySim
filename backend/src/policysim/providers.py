@@ -62,15 +62,24 @@ def fred(path: str, **params: str | int) -> tuple[dict[str, Any], bytes]:
     return payload, raw
 
 
-def wb_pages(path: str, **params: str | int) -> tuple[list[dict[str, Any]], list[bytes]]:
+def wb_pages(
+    path: str, *, page_size: int = 5000, expected_source: str = "", **params: str | int
+) -> tuple[list[dict[str, Any]], list[bytes]]:
     rows: list[dict[str, Any]] = []
     bodies = []
     expected = None
     for page in range(1, MAX_PAGES + 1):
-        payload, raw = fetch(WB, path, {**params, "format": "json", "per_page": 5000, "page": page})
+        query: dict[str, str | int] = {"format": "json", **params}
+        if page_size != 50:
+            query["per_page"] = page_size
+        if page > 1:
+            query["page"] = page
+        payload, raw = fetch(WB, path, query)
         if not isinstance(payload, list) or len(payload) != 2 or not isinstance(payload[0], dict):
             raise DataError("World Bank could not find this indicator, database or geography.", 404)
         meta, items = payload
+        if expected_source and str(meta.get("sourceid", "")) != expected_source:
+            raise DataError("World Bank returned a different database than requested.")
         total = int(meta["total"])
         if expected is not None and expected != total:
             raise DataError("World Bank's catalog changed during retrieval. Please retry.")
@@ -176,7 +185,7 @@ def search(provider: str, query: str, page: int) -> SearchResult:
 
 
 def countries() -> list[Country]:
-    rows, _ = wb_pages("country")
+    rows, _ = wb_pages("country", page_size=500)
     return sorted(
         [
             Country(id=row["id"], name=row["name"], aggregate=row["region"]["id"] == "NA")
@@ -238,7 +247,9 @@ def load(
         country = ""
         vintage = "Latest available FRED revision; not a historical-vintage dataset."
     else:
-        wb_metadata, bodies = wb_pages("indicator/" + quote(series_id, safe=""), source=source_id)
+        wb_metadata, bodies = wb_pages(
+            "indicator/" + quote(series_id, safe=""), page_size=50, source=source_id
+        )
         match = next((row for row in wb_metadata if row["source"]["id"] == source_id), None)
         if match is None:
             raise DataError(
@@ -246,13 +257,22 @@ def load(
             )
         series = wb_series(match)
         raw.extend(bodies)
+        # Retrieve complete histories: avoid fragile date queries at the provider edge.
+        # WDI is the default source; verify its identity on every response page.
+        source_params: dict[str, str | int] = {} if source_id == "2" else {"source": source_id}
         rows, bodies = wb_pages(
             "country/" + country + "/indicator/" + quote(series_id, safe=""),
-            source=source_id,
-            date=start[:4] + ":" + end[:4],
+            page_size=100,
+            expected_source=source_id,
+            **source_params,
         )
         raw.extend(bodies)
-        observations = [Observation(date=row["date"], value=number(row["value"])) for row in rows]
+        series.updated = str(json.loads(bodies[0])[0].get("lastupdated", ""))
+        observations = [
+            Observation(date=row["date"], value=number(row["value"]))
+            for row in rows
+            if start[:4] <= row["date"][:4] <= end[:4]
+        ]
         if (
             all(len(item.date) == 4 and item.date.isdigit() for item in observations)
             and observations
@@ -272,6 +292,8 @@ def load(
             raw_sha256=[],
             vintage=vintage,
             transformations=[],
+            requested_start=start,
+            requested_end=end,
             observations=observations,
         ),
         raw,

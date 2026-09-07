@@ -41,5 +41,7 @@ export interface Snapshot {
   raw_sha256: Array<string>;
   vintage: string;
   transformations: Array<string>;
+  requested_start: string;
+  requested_end: string;
   observations: Array<Observation>;
 }

@@ -58,6 +58,8 @@ class Snapshot(Contract):
     raw_sha256: list[str]
     vintage: str
     transformations: list[str]
+    requested_start: str = ""
+    requested_end: str = ""
     observations: list[Observation]
 
 
