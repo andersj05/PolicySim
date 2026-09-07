@@ -1,0 +1,17 @@
+name: Feature proposal
+description: Define a small research or engineering milestone.
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: User problem
+      description: Who needs this and what research task does it enable?
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Observable outcomes, verification, provenance and exclusions.
+    validations:
+      required: true

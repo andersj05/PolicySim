@@ -1,0 +1,14 @@
+**/node_modules/
+**/dist/
+.venv/
+.uv-cache/
+.npm-cache/
+.pre-commit-cache/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tmp/
+uv.lock
+frontend/package-lock.json
+coverage.xml
+**/__pycache__/

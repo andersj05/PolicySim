@@ -1,0 +1,17 @@
+name: Bug report
+description: Report a reproducible defect without secrets or private data.
+body:
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Steps, expected/actual behavior and minimal public input.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Commit, OS, Python, Node and redacted error output.
+    validations:
+      required: true
