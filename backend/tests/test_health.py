@@ -19,7 +19,7 @@ def test_health_is_read_only() -> None:
 
 def test_unknown_api_does_not_look_successful() -> None:
     with TestClient(app) as client:
-        assert client.get("/api/v1/forecasts").status_code == 404
+        assert client.get("/api/v1/unknown-resource").status_code == 404
 
 
 def test_openapi_exposes_versioned_health_contract() -> None:

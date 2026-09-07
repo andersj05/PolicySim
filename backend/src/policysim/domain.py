@@ -12,7 +12,7 @@ class Contract(BaseModel):
 
 
 class Series(Contract):
-    provider: Provider
+    provider: Literal["fred", "worldbank", "local"]
     id: str
     title: str
     source_id: str = ""

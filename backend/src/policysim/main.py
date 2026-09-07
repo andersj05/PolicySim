@@ -4,11 +4,21 @@ from datetime import date
 from typing import Literal
 
 from fastapi import FastAPI, Path, Query, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, ValidationError
 
-from policysim import providers, storage
+from policysim import providers, research_service, storage
 from policysim.domain import Country, DataError, Provider, ProviderStatus, SearchResult, Snapshot
+from policysim.research_contracts import (
+    AnalysisRequest,
+    AnalysisResult,
+    CsvImportRequest,
+    CsvPreview,
+    CsvPreviewRequest,
+    ForecastRequest,
+    ForecastRun,
+    RunSummary,
+)
 from policysim.settings import data_dir, fred_key
 
 app = FastAPI(
@@ -48,6 +58,70 @@ def download_snapshot(snapshot_id: str = Path(pattern=r"^[a-f0-9]{64}$")) -> JSO
             "Content-Disposition": f'attachment; filename="policysim-{snapshot_id[:12]}.json"',
             "Cache-Control": "no-store",
         },
+    )
+
+
+@app.get("/api/v1/snapshots/{snapshot_id}", response_model=Snapshot)
+def saved_snapshot(snapshot_id: str = Path(pattern=r"^[a-f0-9]{64}$")) -> Snapshot:
+    return storage.read(data_dir(), snapshot_id)
+
+
+@app.get("/api/v1/snapshots/{snapshot_id}/csv")
+def snapshot_csv(snapshot_id: str = Path(pattern=r"^[a-f0-9]{64}$")) -> Response:
+    snapshot = storage.read(data_dir(), snapshot_id)
+    return Response(
+        content=research_service.observations_csv(snapshot.observations),
+        media_type="text/csv",
+        headers={"Content-Disposition": 'attachment; filename="observations.csv"'},
+    )
+
+
+@app.post("/api/v1/imports/preview", response_model=CsvPreview)
+def preview_import(request: CsvPreviewRequest) -> CsvPreview:
+    return research_service.preview_csv(request.content)
+
+
+@app.post("/api/v1/imports", response_model=Snapshot)
+def import_data(request: CsvImportRequest) -> Snapshot:
+    return research_service.import_csv(data_dir(), request)
+
+
+@app.post("/api/v1/analysis", response_model=AnalysisResult)
+def analysis(request: AnalysisRequest) -> AnalysisResult:
+    return research_service.analyze_snapshot(data_dir(), request)
+
+
+@app.post("/api/v1/analysis/csv")
+def analysis_csv(request: AnalysisRequest) -> Response:
+    result = research_service.analyze_snapshot(data_dir(), request)
+    return Response(
+        content=research_service.observations_csv(result.observations),
+        media_type="text/csv",
+        headers={"Content-Disposition": 'attachment; filename="analysis.csv"'},
+    )
+
+
+@app.post("/api/v1/forecasts", response_model=ForecastRun)
+def forecast(request: ForecastRequest) -> ForecastRun:
+    return research_service.run_forecast(data_dir(), request)
+
+
+@app.get("/api/v1/forecasts", response_model=list[RunSummary])
+def forecasts() -> list[RunSummary]:
+    return research_service.list_runs(data_dir())
+
+
+@app.get("/api/v1/forecasts/{run_id}", response_model=ForecastRun)
+def saved_forecast(run_id: str = Path(pattern=r"^[a-f0-9]{64}$")) -> ForecastRun:
+    return research_service.read_run(data_dir(), run_id)
+
+
+@app.get("/api/v1/forecasts/{run_id}/download")
+def download_forecast(run_id: str = Path(pattern=r"^[a-f0-9]{64}$")) -> JSONResponse:
+    run = research_service.read_run(data_dir(), run_id)
+    return JSONResponse(
+        content=run.model_dump(),
+        headers={"Content-Disposition": f'attachment; filename="forecast-{run_id[:12]}.json"'},
     )
 
 

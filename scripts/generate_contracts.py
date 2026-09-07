@@ -5,6 +5,15 @@ from pathlib import Path
 from typing import Any
 
 from policysim.domain import Country, ProviderStatus, SearchResult, Snapshot
+from policysim.research_contracts import (
+    AnalysisRequest,
+    AnalysisResult,
+    CsvImportRequest,
+    CsvPreview,
+    ForecastRequest,
+    ForecastRun,
+    RunSummary,
+)
 
 TARGET = Path(__file__).resolve().parents[1] / "frontend/src/api.generated.ts"
 
@@ -30,7 +39,19 @@ def ts(schema: dict[str, Any]) -> str:
 
 def generate() -> str:
     definitions: dict[str, Any] = {}
-    for model in (Country, ProviderStatus, SearchResult, Snapshot):
+    for model in (
+        Country,
+        ProviderStatus,
+        SearchResult,
+        Snapshot,
+        AnalysisRequest,
+        AnalysisResult,
+        CsvImportRequest,
+        CsvPreview,
+        ForecastRequest,
+        ForecastRun,
+        RunSummary,
+    ):
         schema = model.model_json_schema(mode="serialization")
         definitions.update(schema.pop("$defs", {}))
         definitions[model.__name__] = schema
