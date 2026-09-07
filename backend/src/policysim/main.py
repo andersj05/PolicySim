@@ -3,13 +3,13 @@
 from datetime import date
 from typing import Literal
 
-from fastapi import FastAPI, Query, Request
+from fastapi import FastAPI, Path, Query, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ValidationError
 
-from policysim import providers
+from policysim import providers, storage
 from policysim.domain import Country, DataError, Provider, ProviderStatus, SearchResult, Snapshot
-from policysim.settings import fred_key
+from policysim.settings import data_dir, fred_key
 
 app = FastAPI(
     title="PolicySim",
@@ -37,6 +37,18 @@ def data_error(request: Request, exc: DataError) -> JSONResponse:
 @app.get("/api/v1/providers", response_model=ProviderStatus)
 def provider_status() -> ProviderStatus:
     return ProviderStatus(fred_configured=bool(fred_key()))
+
+
+@app.get("/api/v1/snapshots/{snapshot_id}/download")
+def download_snapshot(snapshot_id: str = Path(pattern=r"^[a-f0-9]{64}$")) -> JSONResponse:
+    snapshot = storage.read(data_dir(), snapshot_id)
+    return JSONResponse(
+        content=snapshot.model_dump(),
+        headers={
+            "Content-Disposition": f'attachment; filename="policysim-{snapshot_id[:12]}.json"',
+            "Cache-Control": "no-store",
+        },
+    )
 
 
 @app.get("/api/v1/countries", response_model=list[Country])

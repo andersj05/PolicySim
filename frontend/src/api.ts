@@ -47,14 +47,3 @@ export function useRemote<T>(url: string | null, refresh = 0) {
     loading: Boolean(url && !current),
   };
 }
-
-export function download(name: string, data: string) {
-  const url = URL.createObjectURL(
-    new Blob([data], { type: 'application/json' }),
-  );
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = name;
-  link.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}

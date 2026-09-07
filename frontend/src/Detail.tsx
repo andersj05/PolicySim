@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { SeriesPick } from './App';
 import type { Snapshot } from './api.generated';
-import { download, useRemote } from './api';
+import { useRemote } from './api';
 import Chart from './Chart';
 import { formatValue } from './format';
 import { Icon, Message } from './components';
@@ -246,18 +246,14 @@ export default function Detail({
           </div>
           <div className="detail-actions">
             <span className="small">Source snapshot saved locally</span>
-            <button
+            <a
               className="secondary"
-              onClick={() =>
-                download(
-                  `${selected.provider}-${selected.id}-${country || 'series'}.json`,
-                  JSON.stringify(data, null, 2),
-                )
-              }
+              href={`/api/v1/snapshots/${data.snapshot_id}/download`}
+              download
             >
               <Icon name="download" size={16} />
               Download data
-            </button>
+            </a>
           </div>
         </>
       )}
@@ -266,7 +262,11 @@ export default function Detail({
         <form
           onSubmit={(event) => {
             event.preventDefault();
-            setDates(draft);
+            const fields = new FormData(event.currentTarget);
+            setDates({
+              start: String(fields.get('start')),
+              end: String(fields.get('end')),
+            });
             setTablePage(0);
           }}
         >
@@ -274,6 +274,7 @@ export default function Detail({
             From
             <input
               type="date"
+              name="start"
               required
               value={draft.start}
               max={draft.end}
@@ -286,6 +287,7 @@ export default function Detail({
             To
             <input
               type="date"
+              name="end"
               required
               value={draft.end}
               min={draft.start}

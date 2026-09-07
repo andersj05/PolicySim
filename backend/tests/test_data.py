@@ -3,6 +3,7 @@
 import hashlib
 import io
 import json
+from concurrent.futures import ThreadPoolExecutor
 from email.message import Message
 from pathlib import Path
 from typing import Any
@@ -302,6 +303,23 @@ def test_storage_reuse_corruption_and_permissions(
         storage.save(tmp_path, result, [b"fixture"])
 
 
+def test_concurrent_snapshot_publication(tmp_path: Path) -> None:
+    content = b"atomic fixture" * 1000
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        hashes = list(pool.map(lambda _: storage.put(tmp_path, content, "raw"), range(16)))
+    assert len(set(hashes)) == 1
+    files = list((tmp_path / "raw").iterdir())
+    assert len(files) == 1 and files[0].read_bytes() == content
+
+
+def test_malformed_geographies_are_safe(monkeypatch: pytest.MonkeyPatch) -> None:
+    mock_fetch(monkeypatch, [wb([{"unexpected": "fixture"}])])
+    with TestClient(app) as client:
+        result = client.get("/api/v1/countries")
+    assert result.status_code == 502
+    assert "unexpected geography metadata" in result.json()["detail"]
+
+
 def test_settings_precedence_and_missing_file(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -345,5 +363,28 @@ def test_http_validation_and_redaction(monkeypatch: pytest.MonkeyPatch) -> None:
         response = client.get("/api/v1/observations?provider=fred&series_id=TEST")
         assert response.status_code == 200 and response.json()["observations"] == []
         assert "fixture-key" not in response.text
+        snapshot_id = response.json()["snapshot_id"]
+        exported = client.get(f"/api/v1/snapshots/{snapshot_id}/download")
+        assert exported.status_code == 200 and exported.json() == response.json()
+        assert exported.headers["content-disposition"].startswith("attachment;")
+        assert client.get("/api/v1/snapshots/invalid/download").status_code == 422
+        missing = client.get(f"/api/v1/snapshots/{'0' * 64}/download")
+        assert missing.status_code == 404
         mock_fetch(monkeypatch, [wb([])])
         assert client.get("/api/v1/countries").json() == []
+
+
+def test_snapshot_read_errors(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    checksum = storage.put(tmp_path, b"{}", "snapshots")
+    with pytest.raises(DataError, match="invalid"):
+        storage.read(tmp_path, checksum)
+    (tmp_path / "snapshots" / f"{checksum}.json").write_bytes(b"corrupted")
+    with pytest.raises(DataError, match="integrity"):
+        storage.read(tmp_path, checksum)
+
+    def fail(path: Path) -> bytes:
+        raise PermissionError()
+
+    monkeypatch.setattr(Path, "read_bytes", fail)
+    with pytest.raises(DataError, match="permissions"):
+        storage.read(tmp_path, checksum)

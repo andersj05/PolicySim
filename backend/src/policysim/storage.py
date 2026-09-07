@@ -37,3 +37,23 @@ def save(root: Path, snapshot: Snapshot, raw: list[bytes]) -> Snapshot:
             "Cannot save the data snapshot. Check local disk permissions/space.", 503
         ) from None
     return snapshot
+
+
+def read(root: Path, snapshot_id: str) -> Snapshot:
+    try:
+        content = (root / "snapshots" / f"{snapshot_id}.json").read_bytes()
+        if hashlib.sha256(content).hexdigest() != snapshot_id:
+            raise DataError("The saved snapshot failed its integrity check.", 500)
+        snapshot = Snapshot.model_validate_json(content)
+    except FileNotFoundError:
+        raise DataError(
+            "This local snapshot was not found. Reload the series to save it again.", 404
+        ) from None
+    except OSError:
+        raise DataError(
+            "Cannot read this local snapshot. Check storage permissions.", 503
+        ) from None
+    except ValueError:
+        raise DataError("The saved snapshot is invalid.", 500) from None
+    snapshot.snapshot_id = snapshot_id
+    return snapshot

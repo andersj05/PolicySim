@@ -507,6 +507,7 @@ h1 {
 }
 .primary,
 .secondary {
+  text-decoration: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -526,6 +527,7 @@ h1 {
   background: var(--accent-dark);
 }
 .secondary {
+  text-decoration: none;
   background: #fff;
   border: 1px solid #dce3d8;
   color: #4f614a;

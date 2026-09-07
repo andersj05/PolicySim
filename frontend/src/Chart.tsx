@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Observation } from './api.generated';
 import { formatValue } from './format';
 
@@ -20,6 +20,16 @@ export default function Chart({
   title: string;
 }) {
   const [hover, setHover] = useState<number | null>(null);
+  const container = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(780);
+  useEffect(() => {
+    if (!container.current) return;
+    const observer = new ResizeObserver(([entry]) => {
+      if (entry) setWidth(Math.max(240, entry.contentRect.width));
+    });
+    observer.observe(container.current);
+    return () => observer.disconnect();
+  }, [observations.length]);
   const values = observations
     .filter((row) => row.value !== null)
     .map((row) => row.value!);
@@ -46,7 +56,9 @@ export default function Chart({
   const lower = min - padding,
     upper = max + padding;
   const x = (index: number) =>
-    12 + ((times[index]! - times[0]!) / (times.at(-1)! - times[0]! || 1)) * 686;
+    12 +
+    ((times[index]! - times[0]!) / (times.at(-1)! - times[0]! || 1)) *
+      (width - 90);
   const y = (value: number) => 218 - ((value - lower) / (upper - lower)) * 202;
   const path = observations
     .map((row, index) => {
@@ -58,7 +70,7 @@ export default function Chart({
     .join(' ');
   const point = hover === null ? undefined : observations[hover];
   return (
-    <div className="chart-wrap">
+    <div className="chart-wrap" ref={container}>
       <div className="chart-readout" aria-live="off">
         {point ? (
           <>
@@ -73,14 +85,15 @@ export default function Chart({
         )}
       </div>
       <svg
-        viewBox="0 0 780 268"
+        viewBox={`0 0 ${width} 268`}
         role="img"
         aria-label={`${title}. ${observations.length} observations. Exact values are available in the table.`}
         onPointerLeave={() => setHover(null)}
         onPointerMove={(event) => {
           const bounds = event.currentTarget.getBoundingClientRect();
           const position =
-            (((event.clientX - bounds.left) / bounds.width) * 780 - 12) / 686;
+            (((event.clientX - bounds.left) / bounds.width) * width - 12) /
+            (width - 90);
           const target = times[0]! + position * (times.at(-1)! - times[0]!);
           let nearest = 0;
           for (let i = 1; i < times.length; i++)
@@ -98,11 +111,11 @@ export default function Chart({
               <line
                 className="grid-line"
                 x1="12"
-                x2="705"
+                x2={width - 78}
                 y1={y(value)}
                 y2={y(value)}
               />
-              <text x="725" y={y(value) + 4}>
+              <text x={width - 65} y={y(value) + 4}>
                 {formatValue(value, true)}
               </text>
             </g>
@@ -116,13 +129,19 @@ export default function Chart({
           strokeLinejoin="round"
           strokeLinecap="round"
         />
-        {observations.length === 1 && observations[0]?.value !== null && (
-          <circle
-            cx={x(0)}
-            cy={y(observations[0]!.value!)}
-            r="4"
-            fill="var(--accent)"
-          />
+        {observations.map((row, index) =>
+          row.value !== null &&
+          (index === 0 || observations[index - 1]?.value === null) &&
+          (index === observations.length - 1 ||
+            observations[index + 1]?.value === null) ? (
+            <circle
+              key={row.date}
+              cx={x(index)}
+              cy={y(row.value)}
+              r="3"
+              fill="var(--accent)"
+            />
+          ) : null,
         )}
         {point && hover !== null && (
           <g>
@@ -146,13 +165,19 @@ export default function Chart({
           </g>
         )}
         {[0, Math.floor((observations.length - 1) / 2), observations.length - 1]
-          .filter((v, i, a) => a.indexOf(v) === i)
+          .filter((v, i, a) => a.indexOf(v) === i && (width >= 500 || i !== 1))
           .map((index, i) => (
             <text
               key={index}
               x={x(index)}
               y="253"
-              textAnchor={i === 0 ? 'start' : i === 2 ? 'end' : 'middle'}
+              textAnchor={
+                i === 0
+                  ? 'start'
+                  : index === observations.length - 1
+                    ? 'end'
+                    : 'middle'
+              }
             >
               {observations[index]?.date}
             </text>
