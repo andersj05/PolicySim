@@ -3,39 +3,48 @@
 ## Context
 
 Bootstrap a clean README-only repository from `ea2b8a7`. No research implementation.
-Process and memory were committed first in `54fa454`.
+Process/memory came first (`54fa454`), then scaffold/checks (`0edb258`) and portable
+launcher fixes (`6219b27`). A final documentation commit closes the task.
 
 ## Changes
 
-- Established main/dev/feat flow, ADRs, current-state memory and handoff templates.
-- Added Python/FastAPI health API, React/TypeScript/Vite placeholder and locked deps.
-- Added terminal launcher, strict checks, tests, hooks, CI, audits and ruleset policy.
-- Documented design references, data vintages, leakage prevention and reproducible runs.
+- Established main/dev/feat flow, ADRs, state memory and handoff templates.
+- Added FastAPI health API, React/TypeScript/Vite placeholder and locked dependencies.
+- Added terminal setup/dev/check/format, tests, hooks, CI, audits and GitHub policy.
+- Documented design direction, data vintages, leakage prevention and run provenance.
+- Published main, dev and feat/project-foundation using the documented one-time
+  bootstrap. All later integration uses feature PRs to dev and dev promotion PRs.
+- Configured merge-only integration, branch retention, alerts and private reporting.
+  The checked-in branch policy defines the final remote protection settings;
+  inspect live enforcement with the commands in [repository administration](../../REPOSITORY.md).
 
 ## Verification
 
-- `python scripts/project.py setup`: locked installs and Git hook installation pass.
-- `python scripts/project.py check`: passes on Windows; one port-ownership test
-  skipped while smoke-test servers occupied port 8000 (passed before servers started).
-- API/policy/launcher suite: 11 tests; backend's minimal health module has 100% coverage.
+- `python scripts/project.py setup`: locked installs and hook installation pass.
+- `python scripts/project.py check`: all checks pass under normal Windows account.
+- 11 tests pass without skips after stopping servers; minimal backend coverage 100%.
+- Ruff, strict mypy, ESLint, TypeScript, Vite production build, Prettier and hooks pass.
+- [CI run 34152415530](https://github.com/andersj05/PolicySim/actions/runs/34152415530):
+  quality on Linux and Windows, dependency audits and quality-gate all pass.
 - Direct health, frontend HTML and proxied health return success.
-- Simulated Vite failure makes the launcher exit nonzero and stop its sibling.
-- `npm --prefix frontend audit --audit-level=high`: no vulnerabilities.
-- Locked Python requirements audited with pip-audit: no known vulnerabilities.
-- Replaced deprecated ESLint major and httpx test dependency during verification.
-- Fixed native Windows typing and TypeScript CSS declarations. Formatting now selects
-  repository source files instead of traversing local caches.
+- Normal-account KeyboardInterrupt shutdown stops servers and releases their ports.
+- npm audit and pip-audit of the final locked dependencies find no known vulnerabilities.
 
 ## Open issues
 
-Hosted CI and ruleset application are pending the final bootstrap steps.
-One upstream Starlette/AnyIO deprecation warning remains visible.
-This environment's terminal tool did not deliver Ctrl+C; failure-triggered cleanup
-was verified instead. Normal terminal KeyboardInterrupt handling is implemented.
-Data, models, persistence, authentication, production hosting and license choice
-are deferred; see the roadmap and constraints.
+One upstream Starlette/AnyIO deprecation warning remains visible. No data provider,
+model, persistence, authentication, production hosting or chosen license yet.
+
+The sandbox terminal did not deliver Ctrl+C and its process permissions impeded
+taskkill; a reload worker required separately verified cleanup. Normal-account
+shutdown passed. The launcher now reports process-tree termination denial clearly
+and attempts cleanup of every sibling instead of silently swallowing the failure.
+
+The first hosted Linux run caught a Windows-only type constant. Explicit platform
+branches fixed it; Linux type checking and both hosted OS jobs now pass. This is
+why hosted validation is part of the foundation rather than a documentation claim.
 
 ## Next action
 
-Publish checked bootstrap branches, verify hosted CI, activate/read back protections,
-and record final evidence. Begin implementation later with one data-provider slice.
+Start M1 with one provider/series slice; use `dev` as the feature branch base.
+Read state, constraints and relevant ADRs before changing architecture.

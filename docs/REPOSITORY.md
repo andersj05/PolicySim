@@ -6,7 +6,7 @@ requires PRs, up-to-date `quality-gate` from GitHub Actions (app ID 15368),
 resolved conversations, and prevents deletion and force pushes. No bypass actors.
 Zero required approvals supports the sole maintainer; set one when the team grows.
 
-The bootstrap task will apply and read back this policy after publishing checked
+The bootstrap procedure applies and reads back this policy after publishing checked
 branches. See [current state](memory/STATE.md) for actual remote verification.
 A checked-in JSON file alone does not enforce GitHub settings.
 

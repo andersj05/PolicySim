@@ -28,7 +28,7 @@ monolith, without microservices or background job infrastructure.
 Create modules when used, not empty abstraction layers. Evaluate Parquet/DuckDB for
 analytical data and SQLite for metadata before hosted storage, but choose after the
 first ingestion/query workload. Introduce a generated TypeScript OpenAPI client
-with a drift check in the first real API feature. The placeholder calls no API and
+with a drift check in the first real API feature. The placeholder has no API client and
 duplicates no domain types. CPU-heavy simulations will need bounded execution,
 durable run IDs and cancellation; do not block async HTTP workers.
 
