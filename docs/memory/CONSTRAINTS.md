@@ -3,7 +3,9 @@
 - Economic data, simulations, forecasting and research; start with FRED and World Bank.
 - Python backend/server, reactive TypeScript UI; routine design choices delegated.
 - Notion workspace usability and Robinhood numerical clarity are design references.
-- Current milestone: live data discovery/loading and polished responsive frontend.
+- Current milestone: extend the explorer into a polished analysis and forecasting
+  workspace, including local data import, statistical models and saved runs.
+- Keep interface copy concise and functional; remove slogans and redundant labels.
 - Search provider catalogs beyond curated suggestions; preserve provenance and nulls.
 - FRED credentials stay backend-only in ignored local configuration.
 - Additional providers are permitted, but deferred until the core pair works well.
