@@ -6,7 +6,7 @@ import sys
 
 import pytest
 
-from scripts.project import require_free_ports, stop_process
+from scripts.project import PROCESS_FLAGS, require_free_ports, stop_process
 
 
 def test_occupied_api_port_fails_clearly() -> None:
@@ -24,7 +24,7 @@ def test_cleanup_stops_owned_process() -> None:
     child = subprocess.Popen(
         [sys.executable, "-c", "import time; time.sleep(60)"],
         start_new_session=sys.platform != "win32",
-        creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0,
+        creationflags=PROCESS_FLAGS,
     )
     try:
         stop_process(child)

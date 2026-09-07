@@ -15,6 +15,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
+if sys.platform == "win32":
+    PROCESS_FLAGS = subprocess.CREATE_NO_WINDOW
+else:
+    PROCESS_FLAGS = 0
+
 
 def executable(name: str) -> str:
     command = "npm.cmd" if name == "npm" and sys.platform == "win32" else name
@@ -96,13 +101,17 @@ def stop_process(process: subprocess.Popen[bytes]) -> None:
     if sys.platform == "win32":
         if process.poll() is None:
             # Only the process tree started by this launcher is targeted.
-            subprocess.run(
+            result = subprocess.run(
                 ["taskkill", "/PID", str(process.pid), "/T", "/F"],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 check=False,
                 creationflags=subprocess.CREATE_NO_WINDOW,
             )
+            if result.returncode != 0 and process.poll() is None:
+                raise RuntimeError(
+                    f"Could not stop owned process tree {process.pid}; check OS permissions."
+                )
     else:
         with suppress(ProcessLookupError):
             os.killpg(process.pid, signal.SIGTERM)
@@ -158,7 +167,7 @@ def dev() -> None:
                     command,
                     cwd=cwd,
                     start_new_session=sys.platform != "win32",
-                    creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0,
+                    creationflags=PROCESS_FLAGS,
                 )
             )
         print("UI: http://127.0.0.1:5173 | API: http://127.0.0.1:8000/docs", flush=True)
@@ -174,8 +183,14 @@ def dev() -> None:
     except KeyboardInterrupt:
         print("\nStopping development servers.", flush=True)
     finally:
+        errors = []
         for process in reversed(processes):
-            stop_process(process)
+            try:
+                stop_process(process)
+            except (RuntimeError, OSError, subprocess.TimeoutExpired) as exc:
+                errors.append(str(exc))
+        if errors:
+            raise RuntimeError("; ".join(errors))
 
 
 def main() -> int:
