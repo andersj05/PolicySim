@@ -90,6 +90,7 @@ export default function App() {
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(1);
   const [refresh, setRefresh] = useState(0);
+  const [countryRefresh, setCountryRefresh] = useState(0);
   const [selected, setSelected] = useState<SeriesPick>(starters.fred[0]!);
   const [recent, setRecent] = useState<SeriesPick[]>([]);
   const [country, setCountry] = useState('USA');
@@ -100,7 +101,7 @@ export default function App() {
     provider === 'worldbank' || selected.provider === 'worldbank'
       ? '/api/v1/countries'
       : null,
-    refresh,
+    countryRefresh,
   );
   const search = useRemote<SearchResult>(
     query
@@ -119,6 +120,7 @@ export default function App() {
     return () => window.removeEventListener('keydown', handle);
   }, []);
   function pick(item: SeriesPick) {
+    setProvider(item.provider);
     setSelected(item);
     setRecent((list) =>
       [
@@ -248,6 +250,7 @@ export default function App() {
                 aria-pressed={provider === item}
                 onClick={() => {
                   setProvider(item);
+                  setSelected(starters[item][0]!);
                   setPage(1);
                 }}
               >
@@ -363,7 +366,7 @@ export default function App() {
                   {countries.error && (
                     <Message
                       error={countries.error}
-                      retry={() => setRefresh((v) => v + 1)}
+                      retry={() => setCountryRefresh((v) => v + 1)}
                     />
                   )}
                 </div>
@@ -469,7 +472,9 @@ export default function App() {
                 ? 'Research server unavailable'
                 : status.data?.fred_configured
                   ? 'FRED key configured'
-                  : 'FRED key not configured'}{' '}
+                  : status.loading
+                    ? 'Checking data connections…'
+                    : 'FRED key not configured'}{' '}
               <span className="footer-separator">·</span> World Bank requires no
               key
             </span>
