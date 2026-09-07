@@ -12,13 +12,23 @@ ROOT = Path(__file__).resolve().parents[1]
 REQUIRED = {
     "AGENTS.md": ["## Read before changing anything", "## GitHub CLI authentication"],
     "docs/memory/STATE.md": [
-        "## Updated", "## Implemented", "## Verified", "## Open issues", "## Next action",
+        "## Updated",
+        "## Implemented",
+        "## Verified",
+        "## Open issues",
+        "## Next action",
     ],
     "docs/memory/README.md": ["## Read order and ownership", "## Update protocol"],
     "docs/memory/CONSTRAINTS.md": ["# Durable constraints"],
     "docs/decisions/README.md": ["# Decision index"],
 }
-HANDOFF_HEADINGS = ["## Context", "## Changes", "## Verification", "## Open issues", "## Next action"]
+HANDOFF_HEADINGS = [
+    "## Context",
+    "## Changes",
+    "## Verification",
+    "## Open issues",
+    "## Next action",
+]
 LINK = re.compile(r"\[[^\]]*\]\(([^\s)]+)(?:\s+[^)]*)?\)")
 PRIVATE_KEY = re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----")
 GITHUB_TOKEN = re.compile(r"\b(?:gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{40,})\b")
@@ -26,9 +36,19 @@ GITHUB_TOKEN = re.compile(r"\b(?:gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-
 
 def repository_files(root: Path) -> list[Path]:
     result = subprocess.run(
-        ["git", "-c", f"safe.directory={root.as_posix()}", "ls-files",
-         "--cached", "--others", "--exclude-standard", "-z"],
-        cwd=root, check=True, capture_output=True,
+        [
+            "git",
+            "-c",
+            f"safe.directory={root.as_posix()}",
+            "ls-files",
+            "--cached",
+            "--others",
+            "--exclude-standard",
+            "-z",
+        ],
+        cwd=root,
+        check=True,
+        capture_output=True,
     )
     return sorted({Path(p.decode("utf-8")) for p in result.stdout.split(b"\0") if p})
 
@@ -37,8 +57,7 @@ def route_errors(base: str, head: str) -> list[str]:
     if base == "main" and head == "dev":
         return []
     if base == "dev" and (
-        re.fullmatch(r"feat/[a-z0-9]+(?:-[a-z0-9]+)*", head)
-        or head.startswith("dependabot/")
+        re.fullmatch(r"feat/[a-z0-9]+(?:-[a-z0-9]+)*", head) or head.startswith("dependabot/")
     ):
         return []
     return [f"Invalid PR route {head!r} -> {base!r}; use feat/* -> dev -> main."]
@@ -58,7 +77,9 @@ def check(root: Path, paths: list[Path]) -> list[str]:
     for name, limit in [("STATE.md", 120), ("README.md", 160)]:
         path = root / "docs/memory" / name
         if path.is_file() and len(path.read_text(encoding="utf-8").splitlines()) > limit:
-            errors.append(f"{path.relative_to(root)} exceeds {limit} lines; compact current memory.")
+            errors.append(
+                f"{path.relative_to(root)} exceeds {limit} lines; compact current memory."
+            )
     index = root / "docs/memory/README.md"
     if index.is_file():
         links = LINK.findall(index.read_text(encoding="utf-8"))
@@ -70,7 +91,8 @@ def check(root: Path, paths: list[Path]) -> list[str]:
             continue  # Deleted files are checked by required-file validation above.
         parts = relative.parts
         if (
-            relative.name.startswith(".env") and relative.name != ".env.example"
+            relative.name.startswith(".env")
+            and relative.name != ".env.example"
             or parts[0] in {"data", "artifacts", "outputs", ".venv", ".tmp"}
             or any(p in {"node_modules", "__pycache__", "dist"} for p in parts)
             or path.suffix.lower() in {".pem", ".key", ".p12", ".sqlite", ".db", ".parquet"}
@@ -112,7 +134,10 @@ def main() -> int:
     if args.commit_guard:
         result = subprocess.run(
             ["git", "-c", f"safe.directory={ROOT.as_posix()}", "branch", "--show-current"],
-            cwd=ROOT, text=True, capture_output=True, check=True,
+            cwd=ROOT,
+            text=True,
+            capture_output=True,
+            check=True,
         )
         branch = result.stdout.strip()
         if branch in {"main", "dev"}:
