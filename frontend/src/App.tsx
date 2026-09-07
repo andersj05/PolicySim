@@ -3,88 +3,18 @@ import type {
   Country,
   ProviderStatus,
   SearchResult,
-  Series,
+  Snapshot,
 } from './api.generated';
 import { useRemote } from './api';
+import { names, pickKey, readLibrary, starters } from './catalog';
+import type { Provider, SeriesPick } from './catalog';
 import Detail from './Detail';
+import ImportDialog from './ImportDialog';
+import Runs from './Runs';
 import { Icon, Message, SourceDialog } from './components';
 
-export type Provider = Series['provider'];
-export type SeriesPick = {
-  provider: Provider;
-  id: string;
-  title: string;
-  source_id: string;
-};
-const names = { fred: 'FRED', worldbank: 'World Bank' };
-const starters: Record<Provider, SeriesPick[]> = {
-  fred: [
-    {
-      provider: 'fred',
-      id: 'UNRATE',
-      title: 'Unemployment Rate',
-      source_id: '',
-    },
-    {
-      provider: 'fred',
-      id: 'GDP',
-      title: 'Gross Domestic Product',
-      source_id: '',
-    },
-    {
-      provider: 'fred',
-      id: 'CPIAUCSL',
-      title: 'Consumer Price Index',
-      source_id: '',
-    },
-    {
-      provider: 'fred',
-      id: 'FEDFUNDS',
-      title: 'Federal Funds Effective Rate',
-      source_id: '',
-    },
-    {
-      provider: 'fred',
-      id: 'DGS10',
-      title: '10-Year Treasury Yield',
-      source_id: '',
-    },
-  ],
-  worldbank: [
-    {
-      provider: 'worldbank',
-      id: 'NY.GDP.MKTP.CD',
-      title: 'GDP (current US$)',
-      source_id: '2',
-    },
-    {
-      provider: 'worldbank',
-      id: 'SP.POP.TOTL',
-      title: 'Population, total',
-      source_id: '2',
-    },
-    {
-      provider: 'worldbank',
-      id: 'FP.CPI.TOTL.ZG',
-      title: 'Inflation, consumer prices (annual %)',
-      source_id: '2',
-    },
-    {
-      provider: 'worldbank',
-      id: 'SL.UEM.TOTL.ZS',
-      title: 'Unemployment, total (% of labor force)',
-      source_id: '2',
-    },
-    {
-      provider: 'worldbank',
-      id: 'SP.DYN.LE00.IN',
-      title: 'Life expectancy at birth, total (years)',
-      source_id: '2',
-    },
-  ],
-};
-
 export default function App() {
+  const [pageView, setPageView] = useState<'data' | 'runs'>('data');
   const [provider, setProvider] = useState<Provider>('fred');
   const [input, setInput] = useState('');
   const [query, setQuery] = useState('');
@@ -92,15 +22,15 @@ export default function App() {
   const [refresh, setRefresh] = useState(0);
   const [countryRefresh, setCountryRefresh] = useState(0);
   const [selected, setSelected] = useState<SeriesPick>(starters.fred[0]!);
-  const [recent, setRecent] = useState<SeriesPick[]>([]);
+  const [library, setLibrary] = useState(readLibrary);
+  const [storageError, setStorageError] = useState('');
   const [country, setCountry] = useState('USA');
   const [guide, setGuide] = useState(false);
+  const [importing, setImporting] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const status = useRemote<ProviderStatus>('/api/v1/providers');
   const countries = useRemote<Country[]>(
-    provider === 'worldbank' || selected.provider === 'worldbank'
-      ? '/api/v1/countries'
-      : null,
+    provider === 'worldbank' ? '/api/v1/countries' : null,
     countryRefresh,
   );
   const search = useRemote<SearchResult>(
@@ -113,27 +43,44 @@ export default function App() {
     const handle = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
         event.preventDefault();
-        inputRef.current?.focus();
+        setPageView('data');
+        window.requestAnimationFrame(() => inputRef.current?.focus());
       }
     };
     window.addEventListener('keydown', handle);
     return () => window.removeEventListener('keydown', handle);
   }, []);
   function pick(item: SeriesPick) {
-    setProvider(item.provider);
     setSelected(item);
-    setRecent((list) =>
+    if (item.provider !== 'local') setProvider(item.provider);
+    if (item.country) setCountry(item.country);
+    setPageView('data');
+  }
+  function persist(next: SeriesPick[]) {
+    setLibrary(next);
+    try {
+      localStorage.setItem('policysim.library.v1', JSON.stringify(next));
+      setStorageError('');
+    } catch {
+      setStorageError(
+        'Browser storage is unavailable. Saved shortcuts will last for this session.',
+      );
+    }
+  }
+  function save(data: Snapshot) {
+    const item: SeriesPick = {
+      provider: data.series.provider,
+      id: data.series.id,
+      title: data.series.title,
+      source_id: data.series.source_id,
+      snapshot_id: data.snapshot_id,
+      country: data.country,
+    };
+    persist(
       [
         item,
-        ...list.filter(
-          (entry) =>
-            !(
-              entry.id === item.id &&
-              entry.provider === item.provider &&
-              entry.source_id === item.source_id
-            ),
-        ),
-      ].slice(0, 6),
+        ...library.filter((entry) => entry.snapshot_id !== data.snapshot_id),
+      ].slice(0, 30),
     );
   }
   function submit(value: string) {
@@ -146,7 +93,7 @@ export default function App() {
   return (
     <div className="app-shell">
       <a className="skip-link" href="#main">
-        Skip to data explorer
+        Skip to workspace
       </a>
       <aside className="sidebar">
         <a className="brand" href="/" aria-label="PolicySim home">
@@ -155,333 +102,332 @@ export default function App() {
             <i />
             <i />
           </span>
-          PolicySim<span className="brand-dot">.</span>
+          <span>PolicySim</span>
         </a>
-        <div className="workspace-label">
-          <span className="workspace-avatar">P</span>
-          <div>
-            Personal workspace<span>Local research</span>
-          </div>
-        </div>
-        <span className="nav-label">WORKSPACE</span>
         <nav aria-label="Workspace">
           <button
-            className="nav-item active"
-            onClick={() => inputRef.current?.focus()}
+            className={`nav-item ${pageView === 'data' ? 'active' : ''}`}
+            aria-current={pageView === 'data' ? 'page' : undefined}
+            onClick={() => setPageView('data')}
           >
             <Icon name="grid" />
-            Data explorer
-            <span className="nav-indicator" />
+            <span>Data</span>
           </button>
-          <button className="nav-item" onClick={() => setGuide(true)}>
-            <Icon name="globe" />
-            Data sources<small>2</small>
+          <button
+            className={`nav-item ${pageView === 'runs' ? 'active' : ''}`}
+            aria-current={pageView === 'runs' ? 'page' : undefined}
+            onClick={() => setPageView('runs')}
+          >
+            <Icon name="forecast" />
+            <span>Forecasts</span>
           </button>
         </nav>
-        <div className="recent-heading">
-          <span className="nav-label">RECENTLY OPENED</span>
-          <Icon name="chart" size={14} />
+        <div className="library-heading">
+          <span>Saved data</span>
+          <span>{library.length}</span>
         </div>
-        <div className="recent-list">
-          {recent.length ? (
-            recent.map((item) => (
-              <button
-                key={`${item.provider}-${item.source_id}-${item.id}`}
-                onClick={() => pick(item)}
-                title={item.title}
-              >
-                <span className={`tiny-dot ${item.provider}`} />
-                <span>{item.title}</span>
-              </button>
+        <div className="library-list">
+          {library.length ? (
+            library.map((item) => (
+              <div className="library-item" key={pickKey(item)}>
+                <button
+                  className={
+                    selected.snapshot_id === item.snapshot_id &&
+                    pageView === 'data'
+                      ? 'selected'
+                      : ''
+                  }
+                  onClick={() => pick(item)}
+                  title={`${item.title}${item.country ? ` · ${item.country}` : ''}`}
+                >
+                  <Icon name="chart" size={14} />
+                  <span>
+                    {item.title}
+                    <small>{item.country || names[item.provider]}</small>
+                  </span>
+                </button>
+                <button
+                  className="remove-saved icon-button"
+                  aria-label={`Remove ${item.title} shortcut`}
+                  onClick={() =>
+                    persist(
+                      library.filter(
+                        (entry) => pickKey(entry) !== pickKey(item),
+                      ),
+                    )
+                  }
+                >
+                  <Icon name="close" size={12} />
+                </button>
+              </div>
             ))
           ) : (
-            <p>
-              Series you open will
-              <br />
-              appear here this session.
+            <p className="small library-empty">
+              Save a series to open it here.
             </p>
           )}
         </div>
+        {storageError && (
+          <p className="small error-text" role="alert">
+            {storageError}
+          </p>
+        )}
         <div className="sidebar-bottom">
-          <div className="local-note">
-            <span className="local-dot" />
-            <div>
-              Your local workspace<span>Source data stays on this device</span>
-            </div>
-          </div>
-          <button className="profile" onClick={() => setGuide(true)}>
-            <span className="profile-avatar">P</span>
-            <div>
-              Research workspace<span>Getting started</span>
-            </div>
-            <Icon name="chevron" size={15} />
+          <button className="nav-item" onClick={() => setImporting(true)}>
+            <Icon name="upload" />
+            <span>Import CSV</span>
           </button>
+          <button className="nav-item" onClick={() => setGuide(true)}>
+            <Icon name="globe" />
+            <span>Data sources</span>
+          </button>
+          <div className="connection-status">
+            <span className={`status-dot ${status.error ? 'offline' : ''}`} />
+            {status.error ? 'Server unavailable' : 'Local workspace'}
+          </div>
         </div>
       </aside>
       <div className="main-shell">
         <header className="topbar">
-          <div className="breadcrumbs">
-            Workspace
-            <Icon name="chevron" size={12} />
-            <strong>Data explorer</strong>
+          <div className="mobile-brand">PolicySim</div>
+          <h1>{pageView === 'data' ? 'Data' : 'Forecasts'}</h1>
+          <div className="topbar-actions">
+            <div className="mobile-nav">
+              <button
+                aria-pressed={pageView === 'data'}
+                onClick={() => setPageView('data')}
+              >
+                Data
+              </button>
+              <button
+                aria-pressed={pageView === 'runs'}
+                onClick={() => setPageView('runs')}
+              >
+                Forecasts
+              </button>
+            </div>
+            <button className="secondary" onClick={() => setImporting(true)}>
+              <Icon name="upload" size={15} />
+              Import CSV
+            </button>
+            <button
+              className="icon-button mobile-help"
+              aria-label="Data sources"
+              onClick={() => setGuide(true)}
+            >
+              <Icon name="globe" />
+            </button>
           </div>
-          <button className="text-button" onClick={() => setGuide(true)}>
-            <Icon name="book" size={15} />
-            Quick guide
-          </button>
         </header>
         <main id="main">
-          <div className="page-heading">
-            <div>
-              <div className="eyebrow">THE WORLD, IN DATA</div>
-              <h1>Find your next insight.</h1>
-              <p>Explore trusted economic data. Build a clearer picture.</p>
-            </div>
-            <span className="workspace-badge">
-              <span />
-              Data explorer <span className="version">01</span>
-            </span>
-          </div>
-          <div className="source-cards" aria-label="Select data provider">
-            {(['fred', 'worldbank'] as const).map((item) => (
-              <button
-                className={`source-card ${provider === item ? 'selected' : ''}`}
-                key={item}
-                aria-pressed={provider === item}
-                onClick={() => {
-                  setProvider(item);
-                  setSelected(starters[item][0]!);
-                  setPage(1);
-                }}
-              >
-                <span className={`provider-logo ${item}`}>
-                  {item === 'fred' ? (
-                    <Icon name="chart" size={23} />
-                  ) : (
-                    <Icon name="globe" size={25} />
-                  )}
-                </span>
-                <span className="source-card-copy">
-                  <strong>
-                    {names[item]}
-                    <span className="provider-tag">
-                      {item === 'fred' ? 'U.S. & global' : 'Across countries'}
-                    </span>
-                  </strong>
-                  <span>
-                    {item === 'fred'
-                      ? 'Markets, monetary policy & the economy'
-                      : 'Development, people & the planet'}
-                  </span>
-                </span>
-                <span className="selection-radio" />
-              </button>
-            ))}
-          </div>
-          <form
-            className="search-form"
-            role="search"
-            onSubmit={(event) => {
-              event.preventDefault();
-              submit(input);
-            }}
-          >
-            <Icon name="search" size={21} />
-            <input
-              ref={inputRef}
-              aria-label={`Search ${names[provider]} series`}
-              value={input}
-              maxLength={200}
-              placeholder={`Search ${names[provider]} by keyword or series ID…`}
-              onChange={(event) => setInput(event.target.value)}
-            />
-            {input && (
-              <button
-                type="button"
-                className="icon-button"
-                aria-label="Clear search"
-                onClick={() => submit('')}
-              >
-                <Icon name="close" size={16} />
-              </button>
-            )}
-            <kbd>Ctrl K</kbd>
-            <button className="primary" type="submit">
-              Search
-              <Icon name="arrow" size={16} />
-            </button>
-          </form>
-          <div className="suggestions">
-            <span>Try exploring</span>
-            {['GDP', 'inflation', 'unemployment', 'population'].map((term) => (
-              <button key={term} onClick={() => submit(term)}>
-                {term}
-                <Icon name="arrow" size={12} />
-              </button>
-            ))}
-          </div>
-          <div className="explorer-grid">
-            <section className="catalog" aria-label="Series catalog">
-              <div className="catalog-heading">
-                <div>
-                  <h2>{query ? 'Search results' : 'A good place to start'}</h2>
-                  <span>
-                    {query
-                      ? `Matches in ${names[provider]}`
-                      : 'Essential economic indicators'}
-                  </span>
-                </div>
-                <span className="count">
-                  {search.data && query
-                    ? search.data.total.toLocaleString()
-                    : query
-                      ? '…'
-                      : '05'}
-                </span>
-              </div>
-              {provider === 'worldbank' && (
-                <div className="country-control">
-                  <label htmlFor="country">COUNTRY OR AGGREGATE</label>
-                  <select
-                    id="country"
-                    value={country}
-                    onChange={(event) => setCountry(event.target.value)}
-                    disabled={countries.loading}
-                  >
-                    <option value="USA">United States</option>
-                    {countries.data
-                      ?.filter((c) => c.id !== 'USA')
-                      .map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name}
-                          {c.aggregate ? ' (aggregate)' : ''}
-                        </option>
-                      ))}
-                  </select>
-                  {countries.loading && (
-                    <span role="status" className="small">
-                      Loading geographies…
-                    </span>
-                  )}
-                  {countries.error && (
-                    <Message
-                      error={countries.error}
-                      retry={() => setCountryRefresh((v) => v + 1)}
-                    />
-                  )}
-                </div>
-              )}
-              <div className="result-list" aria-busy={search.loading}>
-                {search.loading ? (
-                  <div role="status" className="catalog-loading">
-                    <div className="skeleton" />
-                    <div className="skeleton" />
-                    <div className="skeleton" />
-                    <p>
-                      Searching {names[provider]}…
-                      {provider === 'worldbank' && (
-                        <span>
-                          The first search builds the indicator index. This can
-                          take a moment.
-                        </span>
-                      )}
-                    </p>
-                  </div>
-                ) : search.error && query ? (
-                  <Message
-                    error={search.error}
-                    retry={() => setRefresh((v) => v + 1)}
-                  />
-                ) : list.length ? (
-                  list.map((item) => (
+          {pageView === 'runs' ? (
+            <Runs />
+          ) : (
+            <div className="explorer-grid">
+              <section className="catalog" aria-label="Series catalog">
+                <div className="provider-tabs" aria-label="Data provider">
+                  {(['fred', 'worldbank'] as const).map((item) => (
                     <button
-                      className={`series-result ${selected.id === item.id && selected.provider === item.provider && selected.source_id === item.source_id ? 'selected' : ''}`}
-                      key={`${item.source_id}-${item.id}`}
-                      onClick={() => pick(item)}
+                      key={item}
+                      aria-pressed={provider === item}
+                      onClick={() => {
+                        setProvider(item);
+                        setPage(1);
+                        setSelected(starters[item][0]!);
+                      }}
                     >
-                      <span className="result-top">
-                        <span className="mono">{item.id}</span>
-                        <Icon name="arrow" size={15} />
-                      </span>
-                      <strong>{item.title}</strong>
-                      <span className="result-meta">
-                        {'frequency' in item
-                          ? item.provider === 'worldbank'
-                            ? (item as Series).source_name
-                            : (item as Series).frequency
-                          : names[provider]}
-                      </span>
+                      {names[item]}
                     </button>
-                  ))
-                ) : (
-                  <div className="message">
-                    <Icon name="search" size={25} />
-                    <h3>No matching series</h3>
-                    <p>Try a broader keyword or switch providers.</p>
-                    <button className="secondary" onClick={() => submit('')}>
-                      Browse starting points
+                  ))}
+                </div>
+                <form
+                  className="search-form"
+                  role="search"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    submit(input);
+                  }}
+                >
+                  <Icon name="search" size={16} />
+                  <input
+                    ref={inputRef}
+                    value={input}
+                    aria-label={`Search ${names[provider]} series`}
+                    placeholder="Search series…"
+                    maxLength={200}
+                    onChange={(event) => setInput(event.target.value)}
+                  />
+                  {input ? (
+                    <button
+                      type="button"
+                      className="icon-button"
+                      aria-label="Clear search"
+                      onClick={() => submit('')}
+                    >
+                      <Icon name="close" size={14} />
+                    </button>
+                  ) : (
+                    <kbd>Ctrl K</kbd>
+                  )}
+                  <button
+                    type="submit"
+                    className="icon-button"
+                    aria-label="Search"
+                  >
+                    <Icon name="arrow" size={16} />
+                  </button>
+                </form>
+                {provider === 'worldbank' && (
+                  <div className="country-control">
+                    <label htmlFor="country">Country or aggregate</label>
+                    <select
+                      id="country"
+                      value={country}
+                      disabled={countries.loading}
+                      onChange={(event) => {
+                        setCountry(event.target.value);
+                        if (selected.provider === 'worldbank')
+                          setSelected({
+                            ...selected,
+                            snapshot_id: undefined,
+                            country: event.target.value,
+                          });
+                      }}
+                    >
+                      <option value="USA">United States</option>
+                      {countries.data
+                        ?.filter((item) => item.id !== 'USA')
+                        .map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.name}
+                            {item.aggregate ? ' (aggregate)' : ''}
+                          </option>
+                        ))}
+                    </select>
+                    {countries.loading && (
+                      <span className="small" role="status">
+                        Loading countries…
+                      </span>
+                    )}
+                    {countries.error && (
+                      <Message
+                        error={countries.error}
+                        retry={() => setCountryRefresh((v) => v + 1)}
+                      />
+                    )}
+                  </div>
+                )}
+                <div className="catalog-heading">
+                  <h2>{query ? 'Search results' : 'Indicators'}</h2>
+                  <span className="count">
+                    {query
+                      ? (search.data?.total.toLocaleString() ?? '…')
+                      : list.length}
+                  </span>
+                </div>
+                <div className="result-list" aria-busy={search.loading}>
+                  {search.loading ? (
+                    <div className="catalog-loading" role="status">
+                      <div className="skeleton" />
+                      <div className="skeleton" />
+                      <p>Searching {names[provider]}…</p>
+                    </div>
+                  ) : search.error && query ? (
+                    <Message
+                      error={search.error}
+                      retry={() => setRefresh((v) => v + 1)}
+                    />
+                  ) : list.length ? (
+                    list.map((item) => (
+                      <button
+                        className={`series-result ${selected.id === item.id && selected.provider === item.provider && selected.source_id === item.source_id ? 'selected' : ''}`}
+                        key={pickKey(item)}
+                        onClick={() => pick(item)}
+                      >
+                        <strong>{item.title}</strong>
+                        <span className="result-meta">
+                          <span className="mono">{item.id}</span>
+                          {'frequency' in item && (
+                            <span>
+                              {item.provider === 'worldbank'
+                                ? item.source_name
+                                : item.frequency}
+                            </span>
+                          )}
+                        </span>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="message">
+                      <strong>No matching series</strong>
+                      <p>Try another keyword or provider.</p>
+                      <button className="secondary" onClick={() => submit('')}>
+                        Clear search
+                      </button>
+                    </div>
+                  )}
+                </div>
+                {query && search.data && (
+                  <div className="pagination">
+                    <button
+                      disabled={page === 1}
+                      onClick={() => setPage((v) => v - 1)}
+                    >
+                      Previous
+                    </button>
+                    <span>
+                      {search.data.total ? page : 0} /{' '}
+                      {Math.ceil(search.data.total / search.data.page_size)}
+                    </span>
+                    <button
+                      disabled={
+                        page * search.data.page_size >= search.data.total
+                      }
+                      onClick={() => setPage((v) => v + 1)}
+                    >
+                      Next
                     </button>
                   </div>
                 )}
-              </div>
-              {query && search.data && (
-                <div className="pagination">
-                  <button
-                    disabled={page === 1}
-                    onClick={() => setPage((v) => v - 1)}
-                  >
-                    Previous
-                  </button>
-                  <span>
-                    {search.data.total ? page : 0} /{' '}
-                    {Math.ceil(search.data.total / search.data.page_size)}
-                  </span>
-                  <button
-                    disabled={page * search.data.page_size >= search.data.total}
-                    onClick={() => setPage((v) => v + 1)}
-                  >
-                    Next
-                  </button>
-                </div>
-              )}
-              <div className="catalog-note">
-                <Icon name="globe" size={16} />
-                <p>
-                  Direct from the source.
-                  <br />
-                  <span>Every series keeps its provenance.</span>
-                </p>
-              </div>
-            </section>
-            <Detail
-              key={`${selected.provider}-${selected.source_id}-${selected.id}-${country}`}
-              selected={selected}
-              country={country}
-              countryName={
-                countries.data?.find((c) => c.id === country)?.name ?? country
-              }
-            />
-          </div>
-          <footer>
-            <span>
-              PolicySim <span className="footer-separator">/</span> A workspace
-              for better economic questions.
-            </span>
-            <span>
-              {status.error
-                ? 'Research server unavailable'
-                : status.data?.fred_configured
-                  ? 'FRED key configured'
-                  : status.loading
-                    ? 'Checking data connections…'
-                    : 'FRED key not configured'}{' '}
-              <span className="footer-separator">·</span> World Bank requires no
-              key
-            </span>
-          </footer>
+                <button
+                  className="catalog-source-link text-button"
+                  onClick={() => setGuide(true)}
+                >
+                  <Icon name="globe" size={14} />
+                  {names[provider]} source details
+                  <Icon name="arrow" size={14} />
+                </button>
+              </section>
+              <Detail
+                key={`${pickKey(selected)}-${country}`}
+                selected={selected}
+                country={country}
+                countryName={
+                  countries.data?.find((item) => item.id === country)?.name ??
+                  country
+                }
+                save={save}
+                library={library}
+              />
+            </div>
+          )}
         </main>
       </div>
       {guide && <SourceDialog close={() => setGuide(false)} />}
+      {importing && (
+        <ImportDialog
+          close={() => setImporting(false)}
+          imported={(snapshot) => {
+            save(snapshot);
+            pick({
+              ...snapshot.series,
+              snapshot_id: snapshot.snapshot_id,
+              country: '',
+            });
+            setImporting(false);
+          }}
+        />
+      )}
     </div>
   );
 }

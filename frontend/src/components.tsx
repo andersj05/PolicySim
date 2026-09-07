@@ -15,7 +15,10 @@ export function Icon({
     | 'plus'
     | 'close'
     | 'book'
-    | 'chevron';
+    | 'chevron'
+    | 'forecast'
+    | 'upload'
+    | 'save';
   size?: number;
 }) {
   const paths = {
@@ -31,6 +34,9 @@ export function Icon({
     close: 'm6 6 12 12 M6 18 18 6',
     book: 'M4 4h6l2 2 2-2h6v16h-6l-2 2-2-2H4z M12 6v16',
     chevron: 'm9 5 7 7-7 7',
+    forecast: 'M3 20h18 M4 16l4-5 4 2 M12 13l4-7 4 3 M16 6h4v4',
+    upload: 'M12 16V3 m-5 5 5-5 5 5 M4 16v5h16v-5',
+    save: 'M6 3h12v18l-6-4-6 4z',
   };
   return (
     <svg
@@ -82,7 +88,7 @@ export function SourceDialog({ close }: { close: () => void }) {
       }}
     >
       <div className="dialog-heading">
-        <span className="eyebrow">WORKSPACE GUIDE</span>
+        <span className="small">PolicySim</span>
         <button
           className="icon-button"
           aria-label="Close source guide"
@@ -91,11 +97,7 @@ export function SourceDialog({ close }: { close: () => void }) {
           <Icon name="close" />
         </button>
       </div>
-      <h2 id="guide-title">
-        Good research starts
-        <br />
-        with a clear source.
-      </h2>
+      <h2 id="guide-title">Data sources</h2>
       <p>
         Search by keyword or indicator code. Select a series to retrieve its
         original observations and save a local source snapshot.
