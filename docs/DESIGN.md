@@ -19,5 +19,20 @@ analysis → compare outcomes → save a reproducible research record.
   motion and non-color-only chart encodings. Target WCAG 2.2 AA.
 - Support narrow windows without hiding provenance.
 
-Before implementation, review sketches for a series browser, scenario editor and
-comparison view. The current screen only verifies the frontend toolchain.
+## Implemented explorer
+
+The first screen uses a persistent workspace sidebar, two source cards, a search
+bar with Ctrl/Cmd+K focus, catalog results and an observation detail panel. Each
+series offers a time chart, exact-value table, source notes and a JSON download.
+Country/aggregate and date controls expose selection without numerical transforms.
+The layout stacks below 740px; provenance stays available on narrow windows.
+
+Metadata suggestions are navigation shortcuts, not synthetic time series. Green
+identifies the active series and does not judge an economic outcome. Chart gaps
+remain gaps; keyboard users can inspect every original value in the table. Loading,
+provider errors, empty searches and empty date ranges have explicit states.
+The source guide uses a native modal dialog with focus containment and Escape.
+
+Scenario and comparison screens remain future milestones. No formal accessibility
+certification is claimed; continue testing contrast, keyboard and assistive
+technology behavior as the workspace grows.

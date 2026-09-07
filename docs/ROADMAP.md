@@ -8,9 +8,11 @@ See current memory for measured verification.
 
 ## M1 — first data vertical slice
 
-Choose one provider and small series set. Decide licensing, vintages, normalization
-and storage in an ADR. Build ingestion and a series browser with provenance and
-failure/empty/loading states; add generated API types and provider fixtures.
+Expanded by the owner to FRED and World Bank. Search provider catalogs and load
+series with country/date selection, charts, tables, provenance snapshots and
+explicit failure/empty/loading states. Generated API types and deterministic
+provider fixtures are implemented. See [ADR 0003](decisions/0003-data-explorer.md)
+and [current verification](memory/STATE.md).
 
 ## M2 — reproducible analysis
 

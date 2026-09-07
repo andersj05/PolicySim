@@ -1,8 +1,9 @@
 # PolicySim
 
 A local research workspace for economic data, reproducible simulations and forecasting.
-Current milestone: engineering foundation. Providers, models and research screens
-are future work.
+Current milestone: a live FRED and World Bank data explorer. Search catalogs,
+inspect charts and tables, choose countries and dates, and download observations
+with source provenance. Simulations and forecasting are future milestones.
 
 ## Start here
 
@@ -22,8 +23,15 @@ python scripts/project.py dev
 ```
 
 Open <http://127.0.0.1:5173>. API docs: <http://127.0.0.1:8000/docs>.
-Ctrl+C stops both servers. No API keys or external services are required.
-The screen is a foundation placeholder, not a research application.
+Ctrl+C stops both servers. World Bank works without credentials. For FRED, copy
+`.env.example` to `.env` and add `FRED_API_KEY` on the backend. Never use frontend
+environment variables for keys. Both data providers need internet access.
+
+Search by keyword or series ID, or choose one of the suggested starting points.
+World Bank supports country/aggregate selection across its Indicators API catalog.
+Downloads contain untransformed values, missing observations and source metadata.
+Exact provider responses are saved under ignored `data/` with SHA-256 checksums.
+Latest revisions are not historical vintages for backtesting.
 
 ```sh
 python scripts/project.py check
@@ -35,8 +43,8 @@ CI gate. On Windows, `py -3.12` can replace `python` if needed.
 ## Layout
 
 ```text
-backend/src/policysim/  Python API; future data and research modules
-backend/tests/         API contract tests
+backend/src/policysim/  Python API, provider adapters and source snapshots
+backend/tests/         Offline provider and API contract tests
 frontend/              React + strict TypeScript + Vite
 scripts/               Cross-platform development and repository checks
 docs/decisions/        Architecture decision records (ADRs)

@@ -6,7 +6,7 @@ Durable project knowledge travels with Git, works offline and is reviewed in PRs
 
 1. [STATE.md](STATE.md): current capability, verification, blockers and next action.
 2. [CONSTRAINTS.md](CONSTRAINTS.md): durable requirements and scope boundaries.
-3. Latest handoff: [2026-09-07 foundation](sessions/2026-09-07-foundation.md).
+3. Latest handoff: [2026-09-07 data explorer](sessions/2026-09-07-data-explorer.md).
 4. [Decision index](../decisions/README.md) and relevant technical guidance.
 
 The contributor owns updating state/handoff in the same PR. The maintainer reviews
