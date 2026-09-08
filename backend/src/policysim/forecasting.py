@@ -63,8 +63,9 @@ def prepare(
             )
         rows = rows[left : right + 1]
     if any(row.value is None for row in rows):
+        missing_dates = ", ".join(row.date for row in rows if row.value is None)[:160]
         raise DataError(
-            "Missing periods remain in the selected range. Choose a complete date range; "
+            f"Missing periods: {missing_dates}. Choose a complete date range; "
             "the engine does not fill gaps.",
             422,
         )
@@ -223,7 +224,9 @@ def accuracy(rows: list[EvaluationPoint]) -> Accuracy:
         count=len(rows),
         mae=float(np.mean(np.abs(errors))),
         rmse=float(np.sqrt(np.mean(errors**2))),
-        mase=float(np.mean(scaled)) if len(scaled) == len(rows) else None,
+        mase=float(np.mean(scaled))
+        if len(scaled) == len(rows) and all(isfinite(value) for value in scaled)
+        else None,
         coverage=sum(row.lower <= row.actual <= row.upper for row in rows) / len(rows),
     )
 

@@ -4,6 +4,7 @@ import hashlib
 import json
 from datetime import date
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
 import numpy as np
@@ -138,6 +139,23 @@ def test_estimation_nonconvergence_and_invalid_variance(monkeypatch: pytest.Monk
     with pytest.raises(FitError, match="could not be estimated"):
         fit_model(np.arange(30.0), "ets", 3, ModelOptions())
 
+    result = SimpleNamespace(
+        mle_retvals={"converged": False},
+        params=[1.0],
+        param_names=["level"],
+        resid=np.ones(30),
+        predicted_mean=np.ones(3),
+        var_pred_mean=np.ones(3),
+    )
+    result.get_prediction = lambda **kwargs: result
+    monkeypatch.setattr(BadModel, "fit", lambda self, **kwargs: result)
+    with pytest.raises(FitError, match="did not converge"):
+        fit_model(np.arange(30.0), "ets", 3, ModelOptions())
+    result.mle_retvals["converged"] = True
+    result.var_pred_mean = np.array([-1.0, 1.0, 1.0])
+    with pytest.raises(FitError, match="invalid prediction variance"):
+        fit_model(np.arange(30.0), "ets", 3, ModelOptions())
+
 
 @pytest.mark.parametrize(
     "frequency,label,expected",
@@ -206,6 +224,7 @@ def test_statistics_transforms_and_nulls() -> None:
     assert result.statistics.mean == 3 and result.statistics.median == 3
     assert result.statistics.std == pytest.approx(np.sqrt(2.5))
     assert result.statistics.q25 == 2 and result.statistics.q75 == 4
+    assert result.request == config
     diff = analysis.analyze(
         data, "annual", "Units", config.model_copy(update={"transform": "difference"})
     )
@@ -240,6 +259,8 @@ def test_statistics_transforms_and_nulls() -> None:
     gaps = rows()
     gaps[20].value = None
     assert analysis.describe(gaps)[0].adf_pvalue is None
+    with pytest.raises(DataError, match="numerical range"):
+        analysis.describe([Observation(date="2020", value=1e200)])
 
 
 def import_request(**kwargs: Any) -> CsvImportRequest:

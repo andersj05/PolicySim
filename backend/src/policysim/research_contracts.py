@@ -47,6 +47,7 @@ class Correlation(Contract):
 
 class AnalysisResult(Contract):
     snapshot_id: str
+    request: AnalysisRequest
     frequency: str
     transform: Transform
     units: str

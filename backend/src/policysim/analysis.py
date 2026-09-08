@@ -104,6 +104,8 @@ def calendar_rows(
 
 def describe(rows: list[Observation]) -> tuple[Statistics, list[Correlation]]:
     values = np.array([row.value for row in rows if row.value is not None], dtype=float)
+    if np.any(np.abs(values) > 1e100):
+        raise DataError("Values exceed the numerical range. Rescale the input units.", 422)
     n = len(values)
     kwargs: dict[str, float | None] = dict.fromkeys(
         ("mean", "median", "std", "minimum", "maximum", "q25", "q75"), None
@@ -193,6 +195,7 @@ def analyze(
         )
     return AnalysisResult(
         snapshot_id=request.snapshot_id,
+        request=request,
         frequency=frequency,
         transform=request.transform,
         units=units,

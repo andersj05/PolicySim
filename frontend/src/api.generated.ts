@@ -17,6 +17,7 @@ export interface AnalysisRequest {
 }
 export interface AnalysisResult {
   snapshot_id: string;
+  request: AnalysisRequest;
   frequency: string;
   transform: 'level' | 'difference' | 'pct_change' | 'log' | 'rolling_mean';
   units: string;
