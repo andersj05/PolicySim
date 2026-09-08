@@ -6,15 +6,23 @@ import type {
   Snapshot,
 } from './api.generated';
 import { useRemote } from './api';
-import { names, pickKey, readLibrary, starters } from './catalog';
+import {
+  names,
+  pickKey,
+  readLibrary,
+  starters,
+  sourceDescriptions,
+} from './catalog';
 import type { Provider, SeriesPick } from './catalog';
 import Detail from './Detail';
 import ImportDialog from './ImportDialog';
 import Runs from './Runs';
+import Home from './Home';
 import { Icon, Message, SourceDialog } from './components';
 
 export default function App() {
-  const [pageView, setPageView] = useState<'data' | 'runs'>('data');
+  const [pageView, setPageView] = useState<'home' | 'data' | 'runs'>('home');
+  const [catalogVisible, setCatalogVisible] = useState(true);
   const [provider, setProvider] = useState<Provider>('fred');
   const [input, setInput] = useState('');
   const [query, setQuery] = useState('');
@@ -28,6 +36,9 @@ export default function App() {
   const [guide, setGuide] = useState(false);
   const [importing, setImporting] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [pageView, selected]);
   const status = useRemote<ProviderStatus>('/api/v1/providers');
   const countries = useRemote<Country[]>(
     provider === 'worldbank' ? '/api/v1/countries' : null,
@@ -41,9 +52,17 @@ export default function App() {
   );
   useEffect(() => {
     const handle = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
+      const editable =
+        event.target instanceof HTMLElement &&
+        (event.target.isContentEditable ||
+          ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName));
+      if (
+        ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') ||
+        (event.key === '/' && !editable)
+      ) {
         event.preventDefault();
         setPageView('data');
+        setCatalogVisible(true);
         window.requestAnimationFrame(() => inputRef.current?.focus());
       }
     };
@@ -51,6 +70,12 @@ export default function App() {
     return () => window.removeEventListener('keydown', handle);
   }, []);
   function pick(item: SeriesPick) {
+    if (pageView === 'home') setCatalogVisible(true);
+    if (item.provider !== provider) {
+      setInput('');
+      setQuery('');
+      setPage(1);
+    }
     setSelected(item);
     if (item.provider !== 'local') setProvider(item.provider);
     if (item.country) setCountry(item.country);
@@ -106,20 +131,31 @@ export default function App() {
         </a>
         <nav aria-label="Workspace">
           <button
+            className={`nav-item ${pageView === 'home' ? 'active' : ''}`}
+            aria-label="Overview"
+            aria-current={pageView === 'home' ? 'page' : undefined}
+            onClick={() => setPageView('home')}
+          >
+            <Icon name="grid" />
+            <span>Overview</span>
+          </button>
+          <button
             className={`nav-item ${pageView === 'data' ? 'active' : ''}`}
+            aria-label="Data explorer"
             aria-current={pageView === 'data' ? 'page' : undefined}
             onClick={() => setPageView('data')}
           >
-            <Icon name="grid" />
-            <span>Data</span>
+            <Icon name="globe" />
+            <span>Data explorer</span>
           </button>
           <button
             className={`nav-item ${pageView === 'runs' ? 'active' : ''}`}
+            aria-label="Saved forecasts"
             aria-current={pageView === 'runs' ? 'page' : undefined}
             onClick={() => setPageView('runs')}
           >
             <Icon name="forecast" />
-            <span>Forecasts</span>
+            <span>Saved forecasts</span>
           </button>
         </nav>
         <div className="library-heading">
@@ -173,11 +209,19 @@ export default function App() {
           </p>
         )}
         <div className="sidebar-bottom">
-          <button className="nav-item" onClick={() => setImporting(true)}>
+          <button
+            className="nav-item"
+            aria-label="Import CSV"
+            onClick={() => setImporting(true)}
+          >
             <Icon name="upload" />
             <span>Import CSV</span>
           </button>
-          <button className="nav-item" onClick={() => setGuide(true)}>
+          <button
+            className="nav-item"
+            aria-label="Data sources"
+            onClick={() => setGuide(true)}
+          >
             <Icon name="globe" />
             <span>Data sources</span>
           </button>
@@ -190,9 +234,24 @@ export default function App() {
       <div className="main-shell">
         <header className="topbar">
           <div className="mobile-brand">PolicySim</div>
-          <h1>{pageView === 'data' ? 'Data' : 'Forecasts'}</h1>
+          <h1>
+            <span className="breadcrumb">
+              Workspace <span>/</span>
+            </span>
+            {pageView === 'home'
+              ? 'Overview'
+              : pageView === 'data'
+                ? 'Data explorer'
+                : 'Saved forecasts'}
+          </h1>
           <div className="topbar-actions">
             <div className="mobile-nav">
+              <button
+                aria-pressed={pageView === 'home'}
+                onClick={() => setPageView('home')}
+              >
+                Overview
+              </button>
               <button
                 aria-pressed={pageView === 'data'}
                 onClick={() => setPageView('data')}
@@ -206,6 +265,16 @@ export default function App() {
                 Forecasts
               </button>
             </div>
+            {pageView === 'data' && (
+              <button
+                className="secondary catalog-toggle"
+                aria-pressed={catalogVisible}
+                onClick={() => setCatalogVisible(!catalogVisible)}
+              >
+                <Icon name="search" size={15} />
+                {catalogVisible ? 'Focus series' : 'Browse series'}
+              </button>
+            )}
             <button className="secondary" onClick={() => setImporting(true)}>
               <Icon name="upload" size={15} />
               Import CSV
@@ -242,26 +311,46 @@ export default function App() {
               </select>
             </label>
           )}
-          {pageView === 'runs' ? (
+          {pageView === 'home' ? (
+            <Home
+              library={library}
+              open={pick}
+              importData={() => setImporting(true)}
+              forecasts={() => setPageView('runs')}
+            />
+          ) : pageView === 'runs' ? (
             <Runs />
           ) : (
-            <div className="explorer-grid">
-              <section className="catalog" aria-label="Series catalog">
+            <div
+              className={`explorer-grid ${catalogVisible ? '' : 'catalog-hidden'}`}
+            >
+              <section
+                className="catalog"
+                hidden={!catalogVisible}
+                aria-label="Series catalog"
+              >
                 <div className="provider-tabs" aria-label="Data provider">
-                  {(['fred', 'worldbank'] as const).map((item) => (
-                    <button
-                      key={item}
-                      aria-pressed={provider === item}
-                      onClick={() => {
-                        setProvider(item);
-                        setPage(1);
-                        setSelected(starters[item][0]!);
-                      }}
-                    >
-                      {names[item]}
-                    </button>
-                  ))}
+                  {(['fred', 'worldbank', 'bls', 'ecb'] as const).map(
+                    (item) => (
+                      <button
+                        key={item}
+                        aria-pressed={provider === item}
+                        onClick={() => {
+                          setProvider(item);
+                          setPage(1);
+                          setInput('');
+                          setQuery('');
+                          setSelected(starters[item][0]!);
+                        }}
+                      >
+                        {names[item]}
+                      </button>
+                    ),
+                  )}
                 </div>
+                <p className="source-description">
+                  {sourceDescriptions[provider]}
+                </p>
                 <form
                   className="search-form"
                   role="search"

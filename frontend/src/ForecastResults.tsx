@@ -6,7 +6,10 @@ import { formatValue } from './format';
 import { Icon } from './components';
 
 export default function ForecastResults({ run }: { run: ForecastRun }) {
-  const available = run.models.filter((model) => model.status === 'success');
+  const available = run.models
+    .filter((model) => model.status === 'success')
+    .sort((a, b) => (a.validation_rank ?? 999) - (b.validation_rank ?? 999));
+  const leader = available.find((item) => item.validation_rank === 1);
   const [selected, setSelected] = useState(
     available.find((model) => model.model === 'ets')?.model ??
       available[0]?.model,
@@ -23,7 +26,7 @@ export default function ForecastResults({ run }: { run: ForecastRun }) {
   const last = model?.forecast.at(-1);
   function metric(
     item: ModelResult,
-    name: 'mae' | 'rmse' | 'mase' | 'coverage',
+    name: 'mae' | 'rmse' | 'mase' | 'coverage' | 'bias',
   ) {
     const value = item[evaluation]?.[name];
     return name === 'coverage' && value != null
@@ -32,6 +35,30 @@ export default function ForecastResults({ run }: { run: ForecastRun }) {
   }
   return (
     <div className="forecast-results">
+      {leader && tab === 'evaluation' && (
+        <div className="comparison-summary">
+          <span className="comparison-icon">
+            <Icon name="forecast" size={20} />
+          </span>
+          <div>
+            <span className="eyebrow">
+              Lowest validation RMSE
+              {available.filter((item) => item.validation_rank === 1).length > 1
+                ? ' · tied'
+                : ''}
+            </span>
+            <strong>{modelNames[leader.model]}</strong>
+            <p>
+              {leader.rmse_skill == null
+                ? 'Naive error is zero; relative improvement is undefined.'
+                : `${(leader.rmse_skill * 100).toFixed(1)}% lower RMSE than naive across ${run.request.folds} validation windows.`}
+            </p>
+          </div>
+          <button className="secondary" onClick={() => setTab('evaluation')}>
+            Compare models <Icon name="arrow" size={14} />
+          </button>
+        </div>
+      )}
       <div className="result-select">
         <label>
           Displayed model
@@ -95,7 +122,13 @@ export default function ForecastResults({ run }: { run: ForecastRun }) {
                     {formatValue(last?.lower, true)} <span>–</span>{' '}
                     {formatValue(last?.upper, true)}
                   </strong>
-                  <small>Conditional on fitted parameters</small>
+                  <small>
+                    {model.model === 'mean'
+                      ? 'Includes sample-mean uncertainty'
+                      : model.model === 'drift'
+                        ? 'Includes drift estimation uncertainty'
+                        : 'Conditional on fitted parameters'}
+                  </small>
                 </div>
                 <div>
                   <span>Validation RMSE</span>
@@ -112,6 +145,14 @@ export default function ForecastResults({ run }: { run: ForecastRun }) {
                       Math.abs(baseline?.validation?.rmse ?? 0) >= 1e6,
                     )}
                   </small>
+                  {model.validation_rank != null && (
+                    <small>
+                      Validation rank {model.validation_rank} ·{' '}
+                      {model.rmse_skill == null
+                        ? 'Skill unavailable'
+                        : `${Math.abs(model.rmse_skill * 100).toFixed(1)}% ${model.rmse_skill >= 0 ? 'lower' : 'higher'} error than naive`}
+                    </small>
+                  )}
                 </div>
               </div>
               <div className="forecast-chart-toolbar">
@@ -187,6 +228,9 @@ export default function ForecastResults({ run }: { run: ForecastRun }) {
                   <thead>
                     <tr>
                       <th>Model</th>
+                      <th title="Rank by rolling-validation RMSE; never ranked using the holdout">
+                        Rank
+                      </th>
                       <th title="Mean absolute error">MAE</th>
                       <th title="Root mean squared error">RMSE</th>
                       <th title="Mean absolute scaled error; undefined when training scale is zero">
@@ -196,6 +240,9 @@ export default function ForecastResults({ run }: { run: ForecastRun }) {
                         title={`Observed coverage of the ${run.request.interval}% prediction interval`}
                       >
                         Coverage
+                      </th>
+                      <th title="Mean forecast minus actual; positive means overprediction">
+                        Bias
                       </th>
                     </tr>
                   </thead>
@@ -215,17 +262,20 @@ export default function ForecastResults({ run }: { run: ForecastRun }) {
                             {modelNames[item.model]}
                           </button>
                         </td>
-                        {(['mae', 'rmse', 'mase', 'coverage'] as const).map(
-                          (name) => (
-                            <td key={name}>{metric(item, name)}</td>
-                          ),
-                        )}
+                        <td>{item.validation_rank ?? '—'}</td>
+                        {(
+                          ['mae', 'rmse', 'mase', 'coverage', 'bias'] as const
+                        ).map((name) => (
+                          <td key={name}>{metric(item, name)}</td>
+                        ))}
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
               <p className="small evaluation-note">
+                Ranks always use validation. Lower error is better; positive
+                bias means overprediction.{' '}
                 {evaluation === 'validation'
                   ? `${run.request.folds} expanding training windows; each predicts ${run.request.horizon} periods. MASE uses the training-only scale at seasonal period ${run.request.options.seasonal_period}.`
                   : 'The final block follows validation. Repeated tuning against these results compromises holdout independence.'}

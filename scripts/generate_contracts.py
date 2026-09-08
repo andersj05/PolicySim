@@ -10,6 +10,7 @@ from policysim.research_contracts import (
     AnalysisResult,
     CsvImportRequest,
     CsvPreview,
+    ForecastReadiness,
     ForecastRequest,
     ForecastRun,
     RunSummary,
@@ -49,6 +50,7 @@ def generate() -> str:
         CsvImportRequest,
         CsvPreview,
         ForecastRequest,
+        ForecastReadiness,
         ForecastRun,
         RunSummary,
     ):
@@ -59,7 +61,17 @@ def generate() -> str:
     for name, schema in sorted(definitions.items()):
         lines.append(f"export interface {name} {{")
         for field, value in schema["properties"].items():
-            lines.append(f"  {field}: {ts(value)};")
+            expression = ts(value)
+            declaration = f"  {field}: {expression};"
+            if len(declaration) > 80 and expression.startswith("Array<"):
+                lines.extend([f"  {field}: Array<", f"    {expression[6:-1]}", "  >;"])
+            elif len(declaration) > 80 and " | " in expression:
+                choices = expression.split(" | ")
+                lines.append(f"  {field}:")
+                lines.extend(f"    | {choice}" for choice in choices[:-1])
+                lines.append(f"    | {choices[-1]};")
+            else:
+                lines.append(declaration)
         lines.append("}")
     return "\n".join(lines) + "\n"
 

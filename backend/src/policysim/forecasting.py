@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd  # type: ignore[import-untyped]
 from numpy.typing import NDArray
 from statsmodels.stats.diagnostic import acorr_ljungbox  # type: ignore[import-untyped]
+from statsmodels.tsa.ar_model import AutoReg  # type: ignore[import-untyped]
 from statsmodels.tsa.exponential_smoothing.ets import ETSModel  # type: ignore[import-untyped]
 from statsmodels.tsa.statespace.sarimax import SARIMAX  # type: ignore[import-untyped]
 
@@ -18,6 +19,7 @@ from policysim.research_contracts import (
     Accuracy,
     EvaluationPoint,
     ForecastPoint,
+    ForecastReadiness,
     ForecastRequest,
     HorizonAccuracy,
     ModelName,
@@ -28,7 +30,7 @@ from policysim.research_contracts import (
 )
 
 Vector = NDArray[np.float64]
-ENGINE_VERSION = "1.0.0"
+ENGINE_VERSION = "1.1.0"
 
 
 class FitError(Exception):
@@ -44,6 +46,41 @@ class Fit:
     degrees: int = 0
     parameters: list[NamedValue] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
+
+
+def readiness(
+    observations: list[Observation], frequency: str, request: ForecastRequest
+) -> ForecastReadiness:
+    """Check calendar/sample feasibility without fitting; suggest, never apply, a range."""
+    rows, _ = calendar_rows(observations, frequency, request.start, request.end)
+    required = 20 + (request.folds + 1) * request.horizon
+    result = ForecastReadiness(
+        ready=False,
+        message="",
+        periods=len(rows),
+        required_periods=required,
+        missing_periods=sum(row.value is None for row in rows),
+    )
+    try:
+        prepared, _ = prepare(observations, frequency, request)
+        result.periods = len(prepared)
+        result.ready = True
+        result.message = "Calendar and sample checks passed. Individual model fits may still fail."
+    except DataError as exc:
+        result.message = str(exc)
+        # Prefer the longest complete segment, then the more recent segment on ties.
+        best_start = best_length = current_start = 0
+        for index, row in enumerate(rows):
+            if row.value is None:
+                current_start = index + 1
+            else:
+                length = index - current_start + 1
+                if length >= best_length:
+                    best_start, best_length = current_start, length
+        if result.missing_periods and required <= best_length <= 2000:
+            result.suggested_start = rows[best_start].date
+            result.suggested_end = rows[best_start + best_length - 1].date
+    return result
 
 
 def prepare(
@@ -110,7 +147,21 @@ def fit_model(values: Vector, name: ModelName, horizon: int, options: ModelOptio
             f"Each training window needs at least {3 * period} periods for this seasonality."
         )
     steps = np.arange(1, horizon + 1, dtype=float)
-    if name in ("naive", "drift", "seasonal_naive"):
+    if name == "mean":
+        residuals = y - np.mean(y)
+        mean_variance = float(np.var(y, ddof=1)) * (1 + 1 / len(y))
+        fit = Fit(
+            np.full(horizon, np.mean(y)),
+            np.full(horizon, mean_variance),
+            residuals,
+            0,
+            1,
+            notes=["Mean-model intervals include estimation uncertainty in the sample mean."],
+        )
+    elif name == "autoreg":
+        fit = fit_autoreg(y, horizon, options)
+        fit.parameters.append(NamedValue(name="training_scale", value=f"{scale:.12g}"))
+    elif name in ("naive", "drift", "seasonal_naive"):
         lag = period if name == "seasonal_naive" else 1
         residuals = y[lag:] - y[:-lag]
         drift = float(np.mean(residuals)) if name == "drift" else 0.0
@@ -206,6 +257,45 @@ def fit_model(values: Vector, name: ModelName, horizon: int, options: ModelOptio
     return fit
 
 
+def fit_autoreg(y: Vector, horizon: int, options: ModelOptions) -> Fit:
+    """OLS autoregression with fixed consecutive lags; no parameter search."""
+    lag = options.ar_lags
+    needed = max(20, 5 * (lag + (2 if options.ar_trend == "linear" else 1)) + lag)
+    if len(y) < needed:
+        raise FitError(f"AR({lag}) needs at least {needed} periods in every training window.")
+    if float(np.ptp(y)) < 1e-12:
+        raise FitError("This series is effectively constant. Use a naive or mean baseline.")
+    try:
+        result = AutoReg(
+            y, lags=lag, trend="ct" if options.ar_trend == "linear" else "c", old_names=False
+        ).fit()
+        if np.linalg.matrix_rank(result.model._x) < result.model._x.shape[1]:
+            raise FitError("The autoregression design is rank deficient. Reduce lags.")
+        if np.any(np.abs(result.roots) <= 1):
+            raise FitError(
+                "The fitted autoregression is unstable. Try fewer lags, a linear "
+                "trend, or a differenced ARIMA model."
+            )
+        prediction = result.get_prediction(start=len(y), end=len(y) + horizon - 1)
+        return Fit(
+            np.asarray(prediction.predicted_mean, dtype=float),
+            np.asarray(prediction.var_pred_mean, dtype=float),
+            np.asarray(result.resid, dtype=float),
+            lag,
+            lag,
+            [
+                NamedValue(name=str(key), value=f"{float(value):.12g}")
+                for key, value in zip(result.model.exog_names, result.params, strict=True)
+            ],
+            [
+                "Autoregression intervals use fitted innovation variance; coefficient uncertainty "
+                "is excluded. Stable AR roots are required."
+            ],
+        )
+    except (ValueError, np.linalg.LinAlgError, FloatingPointError, OverflowError):
+        raise FitError("Autoregression could not be estimated reliably. Reduce lags.") from None
+
+
 def points(fit: Fit, dates: list[str], interval: int) -> list[ForecastPoint]:
     z = NormalDist().inv_cdf(0.5 + interval / 200)
     delta = z * np.sqrt(fit.variance)
@@ -228,6 +318,7 @@ def accuracy(rows: list[EvaluationPoint]) -> Accuracy:
         if len(scaled) == len(rows) and all(isfinite(value) for value in scaled)
         else None,
         coverage=sum(row.lower <= row.actual <= row.upper for row in rows) / len(rows),
+        bias=float(np.mean(-errors)),
     )
 
 
@@ -319,4 +410,18 @@ def evaluate(
             )
         except FitError as exc:
             results.append(ModelResult(model=name, status="failed", error=str(exc)))
+    rank_models(results)
     return results
+
+
+def rank_models(results: list[ModelResult]) -> None:
+    """Annotate comparable successful models using validation only; preserve model order."""
+    valid = [item for item in results if item.status == "success" and item.validation is not None]
+    baseline = next((item.validation for item in valid if item.model == "naive"), None)
+    scores = [item.validation.rmse for item in valid if item.validation is not None]
+    for item in valid:
+        assert item.validation is not None
+        item.validation_rank = 1 + sum(score < item.validation.rmse for score in scores)
+        item.rmse_skill = (
+            1 - item.validation.rmse / baseline.rmse if baseline and baseline.rmse > 0 else None
+        )
