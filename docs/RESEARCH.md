@@ -1,6 +1,7 @@
 # Research correctness contract
 
-Acceptance criteria for future implementation, not implemented features.
+Correctness requirements for implemented and future research features. See the
+[forecasting methods guide](FORECASTING.md) for current behavior and limitations.
 
 ## Economic data
 
