@@ -125,7 +125,9 @@ export default function ForecastResults({ run }: { run: ForecastRun }) {
                   <small>
                     {model.model === 'mean'
                       ? 'Includes sample-mean uncertainty'
-                      : 'Conditional on fitted parameters'}
+                      : model.model === 'drift'
+                        ? 'Includes drift estimation uncertainty'
+                        : 'Conditional on fitted parameters'}
                   </small>
                 </div>
                 <div>
