@@ -19,6 +19,7 @@ from policysim.research_contracts import (
     AnalysisResult,
     CsvImportRequest,
     CsvPreview,
+    ForecastReadiness,
     ForecastRequest,
     ForecastRun,
     NamedValue,
@@ -31,6 +32,12 @@ if sys.platform == "win32":
     PROCESS_FLAGS = subprocess.CREATE_NO_WINDOW
 else:
     PROCESS_FLAGS = 0
+
+
+def forecast_readiness(root: Path, request: ForecastRequest) -> ForecastReadiness:
+    snapshot = storage.read(root, request.snapshot_id)
+    frequency = analysis.resolve_frequency(request.frequency, snapshot.series.frequency)
+    return forecasting.readiness(snapshot.observations, frequency, request)
 
 
 def csv_rows(content: str) -> tuple[list[str], list[list[str]]]:

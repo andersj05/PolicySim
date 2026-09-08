@@ -86,6 +86,16 @@ class ForecastRequest(ResearchRequest):
     options: ModelOptions = Field(default_factory=ModelOptions)
 
 
+class ForecastReadiness(Contract):
+    ready: bool
+    message: str
+    periods: int
+    required_periods: int
+    missing_periods: int
+    suggested_start: str = ""
+    suggested_end: str = ""
+
+
 class ForecastPoint(Contract):
     date: str
     value: float

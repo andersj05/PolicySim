@@ -65,6 +65,15 @@ export interface ForecastPoint {
   lower: number;
   upper: number;
 }
+export interface ForecastReadiness {
+  ready: boolean;
+  message: string;
+  periods: number;
+  required_periods: number;
+  missing_periods: number;
+  suggested_start: string;
+  suggested_end: string;
+}
 export interface ForecastRequest {
   snapshot_id: string;
   start: string;

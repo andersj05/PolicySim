@@ -15,6 +15,7 @@ from policysim.research_contracts import (
     CsvImportRequest,
     CsvPreview,
     CsvPreviewRequest,
+    ForecastReadiness,
     ForecastRequest,
     ForecastRun,
     RunSummary,
@@ -99,6 +100,11 @@ def analysis_csv(request: AnalysisRequest) -> Response:
         media_type="text/csv",
         headers={"Content-Disposition": 'attachment; filename="analysis.csv"'},
     )
+
+
+@app.post("/api/v1/forecast-readiness", response_model=ForecastReadiness)
+def forecast_readiness(request: ForecastRequest) -> ForecastReadiness:
+    return research_service.forecast_readiness(data_dir(), request)
 
 
 @app.post("/api/v1/forecasts", response_model=ForecastRun)

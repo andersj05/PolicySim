@@ -9,6 +9,7 @@ import { post } from './api';
 import { FrequencySelect } from './AnalysisView';
 import { Icon } from './components';
 import ForecastResults from './ForecastResults';
+import ForecastReadiness from './ForecastReadiness';
 
 import { modelNames } from './catalog';
 const descriptions = {
@@ -41,10 +42,12 @@ export default function Forecast({
   snapshot,
   start,
   end,
+  applyRange,
 }: {
   snapshot: Snapshot;
   start: string;
   end: string;
+  applyRange: (start: string, end: string) => void;
 }) {
   const annual = snapshot.series.frequency.toLowerCase() === 'annual';
   const quarterly = snapshot.series.frequency.toLowerCase() === 'quarterly';
@@ -391,6 +394,7 @@ export default function Forecast({
                 </section>
               </div>
             </details>
+            <ForecastReadiness request={config} applyRange={applyRange} />
             <div className="run-actions">
               <span className="small">
                 {start || 'First observation'} → {end || 'Latest'} · Original

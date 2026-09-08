@@ -19,6 +19,7 @@ from policysim.research_contracts import (
     Accuracy,
     EvaluationPoint,
     ForecastPoint,
+    ForecastReadiness,
     ForecastRequest,
     HorizonAccuracy,
     ModelName,
@@ -45,6 +46,41 @@ class Fit:
     degrees: int = 0
     parameters: list[NamedValue] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
+
+
+def readiness(
+    observations: list[Observation], frequency: str, request: ForecastRequest
+) -> ForecastReadiness:
+    """Check calendar/sample feasibility without fitting; suggest, never apply, a range."""
+    rows, _ = calendar_rows(observations, frequency, request.start, request.end)
+    required = 20 + (request.folds + 1) * request.horizon
+    result = ForecastReadiness(
+        ready=False,
+        message="",
+        periods=len(rows),
+        required_periods=required,
+        missing_periods=sum(row.value is None for row in rows),
+    )
+    try:
+        prepared, _ = prepare(observations, frequency, request)
+        result.periods = len(prepared)
+        result.ready = True
+        result.message = "Calendar and sample checks passed. Individual model fits may still fail."
+    except DataError as exc:
+        result.message = str(exc)
+        # Prefer the longest complete segment, then the more recent segment on ties.
+        best_start = best_length = current_start = 0
+        for index, row in enumerate(rows):
+            if row.value is None:
+                current_start = index + 1
+            else:
+                length = index - current_start + 1
+                if length >= best_length:
+                    best_start, best_length = current_start, length
+        if result.missing_periods and required <= best_length <= 2000:
+            result.suggested_start = rows[best_start].date
+            result.suggested_end = rows[best_start + best_length - 1].date
+    return result
 
 
 def prepare(

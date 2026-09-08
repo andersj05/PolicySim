@@ -182,7 +182,16 @@ export default function Detail({
             </details>
           </div>
           <div hidden={tab !== 'forecast'}>
-            <Forecast snapshot={data} start={start} end={end} />
+            <Forecast
+              snapshot={data}
+              start={start}
+              end={end}
+              applyRange={(from, to) => {
+                setCustom({ start: from, end: to });
+                setDraft({ start: from, end: to });
+                setRange('Custom');
+              }}
+            />
           </div>
           <div hidden={tab === 'forecast'}>
             <AnalysisView

@@ -10,6 +10,7 @@ from policysim.research_contracts import (
     AnalysisResult,
     CsvImportRequest,
     CsvPreview,
+    ForecastReadiness,
     ForecastRequest,
     ForecastRun,
     RunSummary,
@@ -49,6 +50,7 @@ def generate() -> str:
         CsvImportRequest,
         CsvPreview,
         ForecastRequest,
+        ForecastReadiness,
         ForecastRun,
         RunSummary,
     ):

@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from policysim.analysis import next_date
 from policysim.domain import Observation
-from policysim.forecasting import FitError, evaluate, fit_model
+from policysim.forecasting import FitError, evaluate, fit_model, readiness
 from policysim.research_contracts import ForecastRequest, ModelOptions
 
 
@@ -108,3 +108,18 @@ def test_zero_error_rank_ties_and_undefined_skill() -> None:
     )
     assert [item.validation_rank for item in results] == [1, 1, None]
     assert all(item.rmse_skill is None for item in results)
+
+
+def test_readiness_suggests_without_mutating_history() -> None:
+    rows = [Observation(date=str(1900 + i), value=1) for i in range(70)]
+    rows[34].value = None
+    config = ForecastRequest(snapshot_id="a" * 64, horizon=2, folds=2)
+    result = readiness(rows, "annual", config)
+    assert not result.ready and result.missing_periods == 1
+    assert result.suggested_start == "1935-01-01" and result.suggested_end == "1969-01-01"
+    assert rows[34].value is None and config.start == ""
+    config.start, config.end = result.suggested_start, result.suggested_end
+    ready = readiness(rows, "annual", config)
+    assert ready.ready and ready.periods == 35 and ready.required_periods == 26
+    config.horizon = 36
+    assert not readiness(rows, "annual", config).suggested_start

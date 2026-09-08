@@ -124,7 +124,7 @@ def load_bls(series_id: str, start: str, end: str) -> tuple[Series, list[Observa
     payload, raw = fetch(
         BLS, "timeseries/data/" + series_id, {"startyear": start[:4], "endyear": end[:4]}
     )
-    if payload.get("status") != "REQUEST_SUCCEEDED":
+    if not isinstance(payload, dict) or payload.get("status") != "REQUEST_SUCCEEDED":
         raise DataError(
             "BLS could not complete the request. Its daily quota may be exhausted; "
             "retry later or use the equivalent FRED series."
