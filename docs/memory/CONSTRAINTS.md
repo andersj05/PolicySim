@@ -8,7 +8,9 @@
 - Keep interface copy concise and functional; remove slogans and redundant labels.
 - Search provider catalogs beyond curated suggestions; preserve provenance and nulls.
 - FRED credentials stay backend-only in ignored local configuration.
-- Additional providers are permitted, but deferred until the core pair works well.
+- Additional official providers and stronger forecasting are now requested; expose
+  supported scope and preserve provenance. Current design references are Notion's
+  workspace navigation and Spotify's hierarchy, contrast and interaction polish.
 - Use main/dev/feat branches and frequent coherent commits.
 - Memory must work without access to earlier conversations.
 - Terminal launch must work on Windows PowerShell.
