@@ -6,7 +6,13 @@ import type {
   Snapshot,
 } from './api.generated';
 import { useRemote } from './api';
-import { names, pickKey, readLibrary, starters } from './catalog';
+import {
+  names,
+  pickKey,
+  readLibrary,
+  starters,
+  sourceDescriptions,
+} from './catalog';
 import type { Provider, SeriesPick } from './catalog';
 import Detail from './Detail';
 import ImportDialog from './ImportDialog';
@@ -248,20 +254,27 @@ export default function App() {
             <div className="explorer-grid">
               <section className="catalog" aria-label="Series catalog">
                 <div className="provider-tabs" aria-label="Data provider">
-                  {(['fred', 'worldbank'] as const).map((item) => (
-                    <button
-                      key={item}
-                      aria-pressed={provider === item}
-                      onClick={() => {
-                        setProvider(item);
-                        setPage(1);
-                        setSelected(starters[item][0]!);
-                      }}
-                    >
-                      {names[item]}
-                    </button>
-                  ))}
+                  {(['fred', 'worldbank', 'bls', 'ecb'] as const).map(
+                    (item) => (
+                      <button
+                        key={item}
+                        aria-pressed={provider === item}
+                        onClick={() => {
+                          setProvider(item);
+                          setPage(1);
+                          setInput('');
+                          setQuery('');
+                          setSelected(starters[item][0]!);
+                        }}
+                      >
+                        {names[item]}
+                      </button>
+                    ),
+                  )}
                 </div>
+                <p className="source-description">
+                  {sourceDescriptions[provider]}
+                </p>
                 <form
                   className="search-form"
                   role="search"

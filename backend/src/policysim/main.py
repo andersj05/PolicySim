@@ -157,10 +157,11 @@ def observations(
     series_id: str = Query(min_length=1, max_length=160, pattern=r"^[A-Za-z0-9_.-]+$"),
     country: str = Query(default="USA", pattern=r"^[A-Z0-9]{2,3}$"),
     source_id: str = Query(default="2", pattern=r"^[0-9]{1,5}$"),
-    start: date = date(1776, 7, 4),
+    start: date | None = None,
     end: date | None = None,
 ) -> Snapshot:
     end = end or date.today()
+    start = start or (date(max(1, end.year - 9), 1, 1) if provider == "bls" else date(1776, 7, 4))
     if start > end:
         raise DataError("The start date must be on or before the end date.", 422)
     try:

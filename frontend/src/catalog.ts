@@ -1,6 +1,6 @@
 import type { Series } from './api.generated';
 
-export type Provider = 'fred' | 'worldbank';
+export type Provider = 'fred' | 'worldbank' | 'bls' | 'ecb';
 export const modelNames = {
   naive: 'Naive',
   drift: 'Drift',
@@ -15,8 +15,44 @@ export type SeriesPick = Pick<
   snapshot_id?: string;
   country?: string;
 };
-export const names = { fred: 'FRED', worldbank: 'World Bank', local: 'CSV' };
+export const names = {
+  fred: 'FRED',
+  worldbank: 'World Bank',
+  bls: 'BLS',
+  ecb: 'ECB',
+  local: 'CSV',
+};
+export const sourceDescriptions: Record<Provider, string> = {
+  fred: 'US & global economic series · full catalog search',
+  worldbank: 'Global development · countries & aggregates',
+  bls: '10 supported US labor & price series · 10 calendar years',
+  ecb: 'Monthly reference FX · search currency or exact EXR.M key',
+};
 export const starters: Record<Provider, SeriesPick[]> = {
+  bls: [
+    ['LNS14000000', 'Unemployment rate'],
+    ['CES0000000001', 'Total nonfarm payrolls'],
+    ['CUSR0000SA0', 'Consumer price index'],
+    ['CUSR0000SA0L1E', 'Core consumer prices'],
+    ['CES0500000003', 'Average hourly earnings'],
+  ].map(([id, title]) => ({
+    provider: 'bls',
+    id: id!,
+    title: title!,
+    source_id: '',
+  })),
+  ecb: [
+    ['USD', 'US dollar / euro'],
+    ['GBP', 'Pound sterling / euro'],
+    ['JPY', 'Japanese yen / euro'],
+    ['CHF', 'Swiss franc / euro'],
+    ['CAD', 'Canadian dollar / euro'],
+  ].map(([code, title]) => ({
+    provider: 'ecb',
+    id: `EXR.M.${code}.EUR.SP00.A`,
+    title: title!,
+    source_id: '',
+  })),
   fred: [
     ['UNRATE', 'Unemployment Rate'],
     ['GDP', 'Gross Domestic Product'],
@@ -59,6 +95,8 @@ export function readLibrary(): SeriesPick[] {
             return (
               (row.provider === 'fred' ||
                 row.provider === 'worldbank' ||
+                row.provider === 'bls' ||
+                row.provider === 'ecb' ||
                 row.provider === 'local') &&
               typeof row.id === 'string' &&
               typeof row.title === 'string' &&

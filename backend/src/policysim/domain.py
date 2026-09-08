@@ -4,7 +4,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 
-Provider = Literal["fred", "worldbank"]
+Provider = Literal["fred", "worldbank", "bls", "ecb"]
 
 
 class Contract(BaseModel):
@@ -12,7 +12,7 @@ class Contract(BaseModel):
 
 
 class Series(Contract):
-    provider: Literal["fred", "worldbank", "local"]
+    provider: Literal["fred", "worldbank", "bls", "ecb", "local"]
     id: str
     title: str
     source_id: str = ""

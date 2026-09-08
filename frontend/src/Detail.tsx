@@ -24,7 +24,9 @@ export default function Detail({
   const [refresh, setRefresh] = useState(0);
   const [tab, setTab] = useState<'data' | 'statistics' | 'forecast'>('data');
   const [range, setRange] = useState(
-    selected.provider === 'fred' ? '10Y' : 'MAX',
+    selected.provider === 'worldbank' || selected.provider === 'local'
+      ? 'MAX'
+      : '10Y',
   );
   const [custom, setCustom] = useState({ start: '', end: '' });
   const [draft, setDraft] = useState(custom);
@@ -223,6 +225,13 @@ export default function Detail({
               <div>
                 <dt>Source transformations</dt>
                 <dd>{data.transformations.join(' ') || 'None'}</dd>
+              </div>
+              <div>
+                <dt>Requested source range</dt>
+                <dd>
+                  {data.requested_start || 'All available'} →{' '}
+                  {data.requested_end || 'Latest'}
+                </dd>
               </div>
               <div>
                 <dt>Updated</dt>

@@ -163,7 +163,7 @@ export interface SearchResult {
   page_size: number;
 }
 export interface Series {
-  provider: 'fred' | 'worldbank' | 'local';
+  provider: 'fred' | 'worldbank' | 'bls' | 'ecb' | 'local';
   id: string;
   title: string;
   source_id: string;
