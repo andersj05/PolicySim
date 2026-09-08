@@ -72,6 +72,7 @@ def setup() -> None:
 
 def check() -> None:
     run("uv", "run", "--locked", "python", "scripts/check_repo.py")
+    run("uv", "run", "--locked", "python", "scripts/generate_contracts.py", "--check")
     run("uv", "run", "--locked", "ruff", "check", "backend", "scripts")
     run("uv", "run", "--locked", "ruff", "format", "--check", "backend", "scripts")
     run("uv", "run", "--locked", "mypy")

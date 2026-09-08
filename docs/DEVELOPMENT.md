@@ -13,7 +13,10 @@ python scripts/project.py dev
 ```
 
 Setup uses locked Python dependencies, npm ci, and installs local pre-commit hooks.
-No virtual-environment activation, Docker, database, or provider key is needed.
+No virtual-environment activation, Docker or database is needed. World Bank needs
+no key. Copy `.env.example` to ignored root `.env` and set `FRED_API_KEY` for FRED.
+The Python backend reads that key directly; an environment variable takes precedence.
+Restart after environment changes; edits to `.env` apply on the next request.
 On Windows use `py -3.12` instead of `python` when necessary. The launcher resolves
 `npm.cmd` internally, avoiding PowerShell npm.ps1 execution-policy issues.
 
@@ -39,7 +42,9 @@ uv run --locked pre-commit run --all-files
 ```
 
 Check validates memory/links/repository hygiene, Ruff lint/format, mypy, tests
-and branch coverage, frontend lint/types/build, and repository Prettier formatting.
+and branch coverage, generated API contract drift, frontend lint/types/build,
+and repository Prettier formatting. Regenerate changed domain contracts with
+`uv run --locked python scripts/generate_contracts.py`.
 Format modifies files; check does not. Build output and caches are ignored.
 
 Hooks run repository hygiene, Ruff and Prettier plus a protected-branch commit
@@ -74,7 +79,11 @@ updates for uv, npm and CI actions against dev.
 - Git dubious ownership in Codex's sandbox: use a per-command safe.directory for
   this known workspace or execute Git as the owning user, not a wildcard exception.
 - GitHub auth: follow AGENTS.md; a sandbox network error is not proof of a bad token.
-- Local .env is only a template convention now, not automatically loaded settings.
+- Only `FRED_API_KEY` is read from root `.env`; it is never sent to the frontend.
+- World Bank may return transient gateway errors. Retry the request; no synthetic
+  data is substituted. The first search indexes the full indicator catalog.
+- Snapshots live in ignored `data/raw` and `data/snapshots`. Set the environment
+  variable `POLICYSIM_DATA_DIR` to relocate them. Retention cleanup is manual.
 
 ## Release and recovery
 

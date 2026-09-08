@@ -8,19 +8,24 @@ See current memory for measured verification.
 
 ## M1 — first data vertical slice
 
-Choose one provider and small series set. Decide licensing, vintages, normalization
-and storage in an ADR. Build ingestion and a series browser with provenance and
-failure/empty/loading states; add generated API types and provider fixtures.
+Expanded by the owner to FRED and World Bank. Search provider catalogs and load
+series with country/date selection, charts, tables, provenance snapshots and
+explicit failure/empty/loading states. Generated API types and deterministic
+provider fixtures are implemented. See [ADR 0003](decisions/0003-data-explorer.md)
+and [current verification](memory/STATE.md).
 
 ## M2 — reproducible analysis
 
-Baseline model, run manifest, transformations, deterministic tests, rolling-origin
-evaluation and saved results. Verify numerical tolerances against references.
+Implemented: baseline and configurable ETS/SARIMA models, immutable run manifests,
+transformations, CSV import, statistical diagnostics, rolling-origin validation,
+separate holdout and saved results. Numerical fixtures check closed forms, scale
+invariance and temporal isolation. See [methods](FORECASTING.md) and [ADR 0004](decisions/0004-forecast-workspace.md).
 
 ## M3 — research workspace
 
-Scenario editor, run lifecycle/cancellation, comparison, uncertainty, saved notes
-and exports. Review accessibility and representative research workflows.
+Delivered alongside M2: responsive workspace, model comparison, uncertainty charts,
+saved-run browsing and exports. Remaining: scenario editor, run cancellation,
+multivariate/exogenous models and saved research notes. Continue accessibility review.
 
 ## M4 — distribution
 
