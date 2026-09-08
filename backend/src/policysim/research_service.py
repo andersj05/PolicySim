@@ -27,6 +27,10 @@ from policysim.research_contracts import (
 
 ROOT = Path(__file__).resolve().parents[3]
 RUN_LOCK = Lock()
+if sys.platform == "win32":
+    PROCESS_FLAGS = subprocess.CREATE_NO_WINDOW
+else:
+    PROCESS_FLAGS = 0
 
 
 def csv_rows(content: str) -> tuple[list[str], list[list[str]]]:
@@ -143,7 +147,7 @@ def environment() -> list[NamedValue]:
                 text=True,
                 check=True,
                 timeout=5,
-                creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0,
+                creationflags=PROCESS_FLAGS,
             )
             values[key] = (
                 str(bool(result.stdout.strip())).lower()

@@ -47,7 +47,12 @@ M1 `feat/data-explorer` work (`d67a5b5`) into it. No protected branch was modifi
 - Initial sandbox tests had temp/cache permission and launcher cleanup failures;
   outside-sandbox checks resolved those environmental failures. Both dev servers
   stopped during a long browser tool call; restarting restored data/import operation.
-- Hosted CI and Linux checks were not run. The pre-existing AnyIO deprecation remains.
+- During release, hosted Windows checks and dependency audit passed. Linux mypy
+  found a Windows-only subprocess constant in a conditional expression; use a
+  platform-guarded assignment, matching the launcher. Updated hosted gates pending.
+  Local Linux-target mypy passes; the post-fix local test run passes 65 tests with
+  the launcher test skipped because the review app occupies its ports (98.34% coverage).
+  The pre-existing AnyIO deprecation remains.
 
 ## Open issues
 

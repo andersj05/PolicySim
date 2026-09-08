@@ -47,7 +47,9 @@
 - Local jobs are synchronous. Storage retention, auth/hosting and backup UI deferred.
 - Browser testing encountered stopped dev servers; restarting the documented launcher
   restored operation and CSV import passed. One existing AnyIO deprecation remains.
-- Linux/hosted CI not run. Provider availability/terms and deferred license still apply.
+- Hosted Windows checks and dependency audit pass. Initial Linux typing failure in
+  the Windows-only subprocess flag was fixed with a platform-guarded assignment.
+  The updated hosted gate is pending. Provider terms and deferred license still apply.
 
 ## Next action
 
