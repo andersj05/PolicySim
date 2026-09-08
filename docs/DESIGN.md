@@ -21,11 +21,21 @@ analysis → compare outcomes → save a reproducible research record.
 
 ## Implemented explorer
 
-The first screen uses a persistent workspace sidebar, two source cards, a search
-bar with Ctrl/Cmd+K focus, catalog results and an observation detail panel. Each
-series offers a time chart, exact-value table, source notes and a JSON download.
-Country/aggregate and date controls expose selection without numerical transforms.
-The layout stacks below 740px; provenance stays available on narrow windows.
+The workspace uses a compact sidebar, provider tabs, catalog search and a large
+series panel. Slogans, hero descriptions, source cards and repeated workspace
+labels were removed. Ctrl/Cmd+K focuses search. Data, Statistics and Forecast tabs
+share the series context. Advanced parameters and provenance use disclosures.
+
+Saved-series shortcuts persist in browser storage, with a selector available when
+the sidebar collapses. CSV import previews mapped columns. Tables offer sorting,
+missing-only filtering, page size and optional full precision. Headline metrics
+use readable precision; exports preserve values. Forecast charts distinguish
+observations from dashed predictions and shaded intervals; holdout charts overlay
+actuals and predictions. Saved runs reopen without refitting.
+
+The layout stacks below 740px. Tables scroll inside their panels. Small labels use
+at least 11px with strengthened contrast. Model controls retain settings across
+tab/date changes, and old results are labeled when their configuration is stale.
 
 Metadata suggestions are navigation shortcuts, not synthetic time series. Green
 identifies the active series and does not judge an economic outcome. Chart gaps
@@ -33,6 +43,5 @@ remain gaps; keyboard users can inspect every original value in the table. Loadi
 provider errors, empty searches and empty date ranges have explicit states.
 The source guide uses a native modal dialog with focus containment and Escape.
 
-Scenario and comparison screens remain future milestones. No formal accessibility
-certification is claimed; continue testing contrast, keyboard and assistive
-technology behavior as the workspace grows.
+Scenario editing remains future work. No formal accessibility certification is
+claimed; continue testing keyboard and assistive technology behavior as the workspace grows.

@@ -16,13 +16,16 @@ and [current verification](memory/STATE.md).
 
 ## M2 — reproducible analysis
 
-Baseline model, run manifest, transformations, deterministic tests, rolling-origin
-evaluation and saved results. Verify numerical tolerances against references.
+Implemented: baseline and configurable ETS/SARIMA models, immutable run manifests,
+transformations, CSV import, statistical diagnostics, rolling-origin validation,
+separate holdout and saved results. Numerical fixtures check closed forms, scale
+invariance and temporal isolation. See [methods](FORECASTING.md) and [ADR 0004](decisions/0004-forecast-workspace.md).
 
 ## M3 — research workspace
 
-Scenario editor, run lifecycle/cancellation, comparison, uncertainty, saved notes
-and exports. Review accessibility and representative research workflows.
+Delivered alongside M2: responsive workspace, model comparison, uncertainty charts,
+saved-run browsing and exports. Remaining: scenario editor, run cancellation,
+multivariate/exogenous models and saved research notes. Continue accessibility review.
 
 ## M4 — distribution
 

@@ -2,48 +2,54 @@
 
 ## Updated
 
-2026-09-07 � M1 data explorer implemented on `feat/data-explorer` from `dev`.
+2026-09-07 — M2 analysis/forecasting implemented on `feat/forecast-workspace`.
 
 ## Implemented
 
-- Live FRED keyword/ID search and observations; backend-only ignored local key.
-- World Bank Indicators API catalog search across databases and country/aggregate
-  selection. Entire catalog is indexed with a one-hour in-process cache.
-- Calm responsive explorer, provider cards, source results, charts, exact-value
-  tables, calendar-year chart ranges, retrieval dates and source guide.
-- Nulls and original values preserved; explicit loading, failure and empty states.
-- Atomic SHA-256 raw response files and normalized snapshot manifests under ignored
-  `data/`; verified JSON attachment endpoint for saved snapshots.
-- Generated TypeScript domain contracts and drift check; deterministic fixtures for
-  pagination, errors, provenance, concurrent storage, exports and secret redaction.
-- Foundation workflow/CI remains; no new dependencies or services were introduced.
+- Compact data workspace with functional labels, larger charts, accessible tables,
+  persistent snapshot shortcuts, CSV preview/import and mobile layouts.
+- FRED and World Bank discovery/loading retained, with immutable source snapshots.
+- Python calendar normalization, explicit missing periods, differences, percent
+  changes, natural log, trailing means, summary statistics, ACF and ADF.
+- Naive, drift, seasonal naive, additive ETS and configurable ARIMA/SARIMA models.
+- Training-only scaling; expanding multi-step validation; separate final holdout;
+  MAE/RMSE/MASE/coverage and per-horizon errors. No automatic model selection.
+- Analytical intervals, residual diagnostics, holdout actual/prediction overlays,
+  immutable saved runs, full JSON downloads and numerical environment identities.
+- Single local job lock and bounded configurations. Generated frontend contracts.
+- Five implementation commits are
+  `49cbf82`, `87ad830`, `b1e6284`, `e9bedb4`, `c6d0836`.
+- [Methods](../FORECASTING.md) and [ADR 0004](../decisions/0004-forecast-workspace.md)
+  document supported methods, assumptions and limits.
 
 ## Verified
 
-- `python scripts/project.py check`: passes with 44 tests, no skips and 100%
-  backend branch coverage. Ruff, mypy, contracts, frontend lint/types/build and format pass.
-- Live FRED search and UNRATE observations work with local backend configuration.
-- Complete World Bank catalog search returns 594 GDP matches; WDI GDP loads for
-  United States and Canada. Country/aggregate catalog loads.
-- Browser: provider switching, catalog pagination, table view, empty search,
-  Ctrl+K, modal Escape, responsive desktop/mobile and no narrow-window overflow.
-- Snapshot HTTP attachment returns status 200 and complete normalized observations.
-- Custom 2025 FRED date retrieval returns 12 monthly periods with nulls retained.
-- Configured key absent from tracked files and frontend build; `.env` is ignored.
+- Full `python scripts/project.py check`: 66 tests passed, none skipped, 98.52%
+  combined statement/branch coverage. Repository, contracts, Ruff, strict mypy,
+  frontend lint/types/build and formatting checks all pass.
+- Targeted numerical tests: 22 pass, including analytical baseline formulas,
+  random-walk equivalence, scale invariance, chronological isolation and failures.
+- Frontend lint/types/production build pass after numerical-display refinements.
+- Locked Python runtime/dev audit: no known vulnerabilities. npm audit: zero.
+- Live FRED GDP: all three default models fit, evaluate and save; saved run reopens.
+- Browser: CSV import with explicit quarterly frequency/units, transformed GDP
+  statistics, sort/full precision/missing-only controls, saved shortcuts and runs.
+- Mobile 390px viewport: document width equals viewport content width (375px with
+  scrollbar); wide tables scroll internally. Default viewport restored.
 
 ## Open issues
 
-- Some World Bank requests return upstream timeouts/gateway errors; a live source-37
-  probe timed out. Source-specific behavior has deterministic coverage, but not all
-  databases have been live-verified. Retry errors; never substitute invented values.
-- Latest revisions only, not historical-vintage datasets. Catalog metadata may omit
-  units/frequency; UI labels omissions. World Bank date selection uses calendar years.
-- Recent navigation is session-local. No saved workspace, models, auth, hosting or
-  storage retention UI. Snapshots require manual local cleanup.
-- One existing Starlette/AnyIO deprecation warning. Hosted CI not run for this branch.
-- License remains deferred. Public source datasets remain subject to provider terms.
+- Historical evaluations use latest revisions, without verified historical vintages.
+- Forecasts are univariate on regular calendars. Trading calendars, imputation,
+  exogenous/multivariate models, scenarios and job cancellation are not implemented.
+- Forecasts require complete internal observations; FRED UNRATE currently has an
+  internal missing period in the recent range. Choose a complete range explicitly.
+- Local jobs are synchronous. Storage retention, auth/hosting and backup UI deferred.
+- Browser testing encountered stopped dev servers; restarting the documented launcher
+  restored operation and CSV import passed. One existing AnyIO deprecation remains.
+- Linux/hosted CI not run. Provider availability/terms and deferred license still apply.
 
 ## Next action
 
-Review this feature branch, then open a PR to `dev` and run hosted Linux/Windows
-quality gates before integration. M2 research models require a separate scope.
+Review this branch and open a PR to `dev` for hosted gates. Launch the local app
+with `python scripts/project.py dev`.
