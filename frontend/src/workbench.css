@@ -284,6 +284,15 @@ main {
 .detail {
   padding: 30px 36px;
 }
+.detail.with-forecast .metric-row {
+  display: none;
+}
+.detail.with-forecast .series-context {
+  margin-bottom: 14px;
+}
+.detail.with-forecast h2 {
+  font-size: 26px;
+}
 .detail h2 {
   font-size: 30px;
   font-weight: 600;
@@ -913,6 +922,8 @@ td {
   .topbar {
     padding: 15px 18px;
     gap: 14px;
+    height: auto;
+    min-height: 76px;
   }
   .topbar h1 {
     display: none;

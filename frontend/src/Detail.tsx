@@ -54,7 +54,10 @@ export default function Detail({
   const saved =
     data && library.some((entry) => entry.snapshot_id === data.snapshot_id);
   return (
-    <article className="detail" aria-busy={loading}>
+    <article
+      className={`detail ${tab === 'forecast' ? 'with-forecast' : ''}`}
+      aria-busy={loading}
+    >
       <div className="detail-top">
         <span className={`source-label ${selected.provider}`}>
           <span />

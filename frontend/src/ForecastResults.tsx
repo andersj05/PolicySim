@@ -35,7 +35,7 @@ export default function ForecastResults({ run }: { run: ForecastRun }) {
   }
   return (
     <div className="forecast-results">
-      {leader && (
+      {leader && tab === 'evaluation' && (
         <div className="comparison-summary">
           <span className="comparison-icon">
             <Icon name="forecast" size={20} />
@@ -122,7 +122,11 @@ export default function ForecastResults({ run }: { run: ForecastRun }) {
                     {formatValue(last?.lower, true)} <span>–</span>{' '}
                     {formatValue(last?.upper, true)}
                   </strong>
-                  <small>Conditional on fitted parameters</small>
+                  <small>
+                    {model.model === 'mean'
+                      ? 'Includes sample-mean uncertainty'
+                      : 'Conditional on fitted parameters'}
+                  </small>
                 </div>
                 <div>
                   <span>Validation RMSE</span>
@@ -139,6 +143,14 @@ export default function ForecastResults({ run }: { run: ForecastRun }) {
                       Math.abs(baseline?.validation?.rmse ?? 0) >= 1e6,
                     )}
                   </small>
+                  {model.validation_rank != null && (
+                    <small>
+                      Validation rank {model.validation_rank} ·{' '}
+                      {model.rmse_skill == null
+                        ? 'Skill unavailable'
+                        : `${(model.rmse_skill * 100).toFixed(1)}% improvement`}
+                    </small>
+                  )}
                 </div>
               </div>
               <div className="forecast-chart-toolbar">

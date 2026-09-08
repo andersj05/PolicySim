@@ -52,9 +52,17 @@ export default function App() {
   );
   useEffect(() => {
     const handle = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
+      const editable =
+        event.target instanceof HTMLElement &&
+        (event.target.isContentEditable ||
+          ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName));
+      if (
+        ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') ||
+        (event.key === '/' && !editable)
+      ) {
         event.preventDefault();
         setPageView('data');
+        setCatalogVisible(true);
         window.requestAnimationFrame(() => inputRef.current?.focus());
       }
     };
@@ -62,6 +70,7 @@ export default function App() {
     return () => window.removeEventListener('keydown', handle);
   }, []);
   function pick(item: SeriesPick) {
+    if (pageView === 'home') setCatalogVisible(true);
     if (item.provider !== provider) {
       setInput('');
       setQuery('');
