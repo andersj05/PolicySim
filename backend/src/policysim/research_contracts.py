@@ -8,7 +8,7 @@ from policysim.domain import Contract, Observation
 
 Frequency = Literal["auto", "annual", "quarterly", "monthly", "weekly", "daily"]
 Transform = Literal["level", "difference", "pct_change", "log", "rolling_mean"]
-ModelName = Literal["naive", "drift", "seasonal_naive", "ets", "sarima"]
+ModelName = Literal["naive", "mean", "drift", "seasonal_naive", "ets", "sarima", "autoreg"]
 
 
 class ResearchRequest(Contract):
@@ -58,6 +58,8 @@ class AnalysisResult(Contract):
 
 
 class ModelOptions(ResearchRequest):
+    ar_lags: int = Field(default=3, ge=1, le=24)
+    ar_trend: Literal["constant", "linear"] = "constant"
     p: int = Field(default=1, ge=0, le=3)
     d: int = Field(default=1, ge=0, le=2)
     q: int = Field(default=1, ge=0, le=3)
@@ -80,7 +82,7 @@ class ForecastRequest(ResearchRequest):
     horizon: int = Field(default=12, ge=1, le=36)
     folds: int = Field(default=3, ge=2, le=5)
     interval: Literal[80, 95] = 95
-    models: list[ModelName] = Field(default=["naive", "ets", "sarima"], min_length=1, max_length=5)
+    models: list[ModelName] = Field(default=["naive", "ets", "sarima"], min_length=1, max_length=7)
     options: ModelOptions = Field(default_factory=ModelOptions)
 
 
@@ -104,6 +106,7 @@ class Accuracy(Contract):
     rmse: float
     mase: float | None
     coverage: float
+    bias: float | None = None
 
 
 class HorizonAccuracy(Accuracy):
@@ -127,6 +130,8 @@ class ModelResult(Contract):
     model: ModelName
     status: Literal["success", "failed"]
     error: str = ""
+    validation_rank: int | None = None
+    rmse_skill: float | None = None
     forecast: list[ForecastPoint] = Field(default_factory=list)
     validation: Accuracy | None = None
     holdout: Accuracy | None = None

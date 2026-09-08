@@ -187,8 +187,11 @@ def run_forecast(root: Path, request: ForecastRequest) -> ForecastRun:
                 "No automatic model selection. Repeated manual tuning on the holdout "
                 "compromises its independence.",
                 "Future forecasts refit on all selected observations, including evaluation data.",
-                "Gaussian prediction intervals condition on fitted parameters; "
-                "parameter, model and revision uncertainty are excluded.",
+                "Gaussian prediction intervals condition on fitted parameters, except the "
+                "mean baseline includes sample-mean estimation variance. Model and revision "
+                "uncertainty are excluded.",
+                "Model ranks and RMSE skill use rolling validation only; ties share rank. "
+                "Positive skill means lower RMSE than naive. No automatic model selection.",
                 "No imputation, resampling, causal effects or future exogenous variables. "
                 "Forecasts remain in original units.",
                 "MASE uses training-only seasonal naive scale at the configured period, "

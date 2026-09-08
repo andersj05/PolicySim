@@ -3,6 +3,8 @@ import type { Series } from './api.generated';
 export type Provider = 'fred' | 'worldbank' | 'bls' | 'ecb';
 export const modelNames = {
   naive: 'Naive',
+  mean: 'Historical mean',
+  autoreg: 'Autoregression',
   drift: 'Drift',
   seasonal_naive: 'Seasonal naive',
   ets: 'Exponential smoothing',

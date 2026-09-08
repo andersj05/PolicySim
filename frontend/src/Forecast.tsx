@@ -13,6 +13,8 @@ import ForecastResults from './ForecastResults';
 import { modelNames } from './catalog';
 const descriptions = {
   naive: 'Last observed value',
+  mean: 'Long-run average with a constant forecast',
+  autoreg: 'Learn persistence from consecutive lags',
   drift: 'Average historical change',
   seasonal_naive: 'Repeat the last seasonal cycle',
   ets: 'Estimate level, trend and seasonality',
@@ -20,6 +22,8 @@ const descriptions = {
 };
 type Model = ForecastRequest['models'][number];
 const defaults: ModelOptions = {
+  ar_lags: 3,
+  ar_trend: 'constant',
   p: 1,
   d: 1,
   q: 1,
@@ -240,6 +244,47 @@ export default function Forecast({
             <details className="model-options">
               <summary>Model parameters & data handling</summary>
               <div className="advanced-grid">
+                {models.includes('autoreg') && (
+                  <section>
+                    <h4>Autoregression</h4>
+                    <label>
+                      Consecutive lags
+                      <input
+                        type="number"
+                        min={1}
+                        max={24}
+                        required
+                        value={options.ar_lags}
+                        onChange={(event) =>
+                          setOptions({
+                            ...options,
+                            ar_lags: Number(event.target.value),
+                          })
+                        }
+                      />
+                    </label>
+                    <label>
+                      Deterministic trend
+                      <select
+                        value={options.ar_trend}
+                        onChange={(event) =>
+                          setOptions({
+                            ...options,
+                            ar_trend: event.target
+                              .value as ModelOptions['ar_trend'],
+                          })
+                        }
+                      >
+                        <option value="constant">Constant</option>
+                        <option value="linear">Constant + linear trend</option>
+                      </select>
+                    </label>
+                    <p className="field-help">
+                      Fixed lags, estimated by least squares. Unstable fits are
+                      reported as failures.
+                    </p>
+                  </section>
+                )}
                 {models.includes('sarima') && (
                   <section>
                     <h4>ARIMA / SARIMA</h4>

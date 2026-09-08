@@ -5,6 +5,7 @@ export interface Accuracy {
   rmse: number;
   mase: number | null;
   coverage: number;
+  bias: number | null;
 }
 export interface AnalysisRequest {
   snapshot_id: string;
@@ -73,7 +74,9 @@ export interface ForecastRequest {
   horizon: number;
   folds: number;
   interval: 80 | 95;
-  models: Array<'naive' | 'drift' | 'seasonal_naive' | 'ets' | 'sarima'>;
+  models: Array<
+    'naive' | 'mean' | 'drift' | 'seasonal_naive' | 'ets' | 'sarima' | 'autoreg'
+  >;
   options: ModelOptions;
 }
 export interface ForecastRun {
@@ -97,9 +100,12 @@ export interface HorizonAccuracy {
   rmse: number;
   mase: number | null;
   coverage: number;
+  bias: number | null;
   horizon: number;
 }
 export interface ModelOptions {
+  ar_lags: number;
+  ar_trend: 'constant' | 'linear';
   p: number;
   d: number;
   q: number;
@@ -113,9 +119,18 @@ export interface ModelOptions {
   ets_seasonal: boolean;
 }
 export interface ModelResult {
-  model: 'naive' | 'drift' | 'seasonal_naive' | 'ets' | 'sarima';
+  model:
+    | 'naive'
+    | 'mean'
+    | 'drift'
+    | 'seasonal_naive'
+    | 'ets'
+    | 'sarima'
+    | 'autoreg';
   status: 'success' | 'failed';
   error: string;
+  validation_rank: number | null;
+  rmse_skill: number | null;
   forecast: Array<ForecastPoint>;
   validation: Accuracy | null;
   holdout: Accuracy | null;
