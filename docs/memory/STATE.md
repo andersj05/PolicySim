@@ -2,56 +2,59 @@
 
 ## Updated
 
-2026-09-07 — M2 analysis/forecasting implemented on `feat/forecast-workspace`.
+2026-09-08 (UTC) — official data and research workbench on `feat/research-workbench`.
+Created from current `origin/dev` (`ab9c9cd`); no protected branch changed.
 
 ## Implemented
 
-- Compact data workspace with functional labels, larger charts, accessible tables,
-  persistent snapshot shortcuts, CSV preview/import and mobile layouts.
-- FRED and World Bank discovery/loading retained, with immutable source snapshots.
-- Python calendar normalization, explicit missing periods, differences, percent
-  changes, natural log, trailing means, summary statistics, ACF and ADF.
-- Naive, drift, seasonal naive, additive ETS and configurable ARIMA/SARIMA models.
-- Training-only scaling; expanding multi-step validation; separate final holdout;
-  MAE/RMSE/MASE/coverage and per-horizon errors. No automatic model selection.
-- Analytical intervals, residual diagnostics, holdout actual/prediction overlays,
-  immutable saved runs, full JSON downloads and numerical environment identities.
-- Single local job lock and bounded configurations. Generated frontend contracts.
-- Five implementation commits are
-  `49cbf82`, `87ad830`, `b1e6284`, `e9bedb4`, `c6d0836`.
-- [Methods](../FORECASTING.md) and [ADR 0004](../decisions/0004-forecast-workspace.md)
-  document supported methods, assumptions and limits.
+- Four providers: existing FRED/World Bank catalog search, 10 supported direct BLS
+  monthly labor/price series, 21 ECB monthly reference currencies plus exact EXR.M keys.
+- Immutable raw responses/snapshots, explicit source scope, null preservation,
+  BLS footnotes, ECB status flags and unit/identity checks. No new keys/dependencies.
+- Seven methods: naive, historical mean, drift, seasonal naive, ETS, ARIMA/SARIMA
+  and fixed-lag autoregression. Stable roots, full-rank designs and sample bounds.
+- Validation-only RMSE ranks/skill and error bias. Chronological folds, separate
+  final holdout, analytical intervals, immutable runs and old-run compatibility.
+- Calendar/sample readiness with explicit complete-segment selection. No imputation;
+  applying an earlier range changes the forecast origin visibly.
+- New overview, source collections, dark navigation, saved library, focus mode,
+  clearer model results and responsive tables. All source artwork is decorative CSS.
+- Existing CSV import, transformations, statistics/ADF/ACF, downloads and provenance.
+- [Source research](../SOURCE_RESEARCH.md), [methods](../FORECASTING.md), and
+  [ADR 0005](../decisions/0005-research-workbench.md) explain scope and follow-ons.
+- Seven implementation/research commits through `1e59129`; the handoff commit follows.
 
 ## Verified
 
-- Full `python scripts/project.py check`: 66 tests passed, none skipped, 98.52%
-  combined statement/branch coverage. Repository, contracts, Ruff, strict mypy,
-  frontend lint/types/build and formatting checks all pass.
-- Targeted numerical tests: 22 pass, including analytical baseline formulas,
-  random-walk equivalence, scale invariance, chronological isolation and failures.
-- Frontend lint/types/production build pass after numerical-display refinements.
-- Locked Python runtime/dev audit: no known vulnerabilities. npm audit: zero.
-- Live FRED GDP: all three default models fit, evaluate and save; saved run reopens.
-- Browser: CSV import with explicit quarterly frequency/units, transformed GDP
-  statistics, sort/full precision/missing-only controls, saved shortcuts and runs.
-- Mobile 390px viewport: document width equals viewport content width (375px with
-  scrollbar); wide tables scroll internally. Default viewport restored.
+- Full `python scripts/project.py check`: 89 tests pass, none skipped, 98.51%
+  combined statement/branch coverage; contracts, repository policy, Ruff, strict
+  mypy, frontend lint/types/build and Prettier all pass.
+- Numerical reference tests cover mean variance, AR(1) OLS forecasts and multistep
+  variance, scaling, unstable/rank-deficient fits, validation isolation and ties.
+- Live ECB and BLS downloads preserve complete responses. All seven models fit on
+  the live monthly ECB USD/EUR selection; the saved run reopens in the browser.
+- Browser: overview/source navigation, BLS/ECB loading, model selection/ranking,
+  saved runs, focus mode, source saving and explicit complete-history suggestion.
+- Mobile 390px: document width 375px with scrollbar; wide comparison tables scroll
+  internally. Header overlap fixed. Default viewport restored after review.
+- Tab focus movement verified. Ctrl/Cmd+K and slash handling implemented; shortcut
+  synthesis in the in-app browser did not trigger these, so not browser-verified.
+- No dependency changes. Hosted Linux/Windows gates and dependency audits were not
+  rerun in this task; one existing AnyIO deprecation warning remains.
 
 ## Open issues
 
-- Historical evaluations use latest revisions, without verified historical vintages.
-- Forecasts are univariate on regular calendars. Trading calendars, imputation,
-  exogenous/multivariate models, scenarios and job cancellation are not implemented.
-- Forecasts require complete internal observations; FRED UNRATE currently has an
-  internal missing period in the recent range. Choose a complete range explicitly.
-- Local jobs are synchronous. Storage retention, auth/hosting and backup UI deferred.
-- Browser testing encountered stopped dev servers; restarting the documented launcher
-  restored operation and CSV import passed. One existing AnyIO deprecation remains.
-- Hosted Windows checks and dependency audit pass. Initial Linux typing failure in
-  the Windows-only subprocess flag was fixed with a platform-guarded assignment.
-  The updated hosted gate is pending. Provider terms and deferred license still apply.
+- Evaluations use latest revisions, not verified historical information sets.
+- BLS catalog is scoped to 10 series; unregistered API: 10 calendar years/request,
+  25 requests/day. UI loads latest 10 calendar years; earlier requests via API.
+- ECB supports monthly reference FX, not the full SDMX catalog or trading prices.
+- Live ECB initially timed out; retry succeeded. Provider availability remains external.
+- Forecasts remain univariate, with complete regular calendars and conditional
+  intervals. No exogenous models, ensembles, causal scenarios or automatic tuning.
+- Jobs are synchronous with one local lock. No cancellation, hosted auth, retention
+  management or backup UI. Source terms and the owner's deferred license still apply.
 
 ## Next action
 
-Review this branch and open a PR to `dev` for hosted gates. Launch the local app
-with `python scripts/project.py dev`.
+Review the new branch and open a PR to `dev` when ready. Start or reopen the local
+app with `python scripts/project.py dev`; see the latest handoff for verification.

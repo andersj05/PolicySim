@@ -24,7 +24,10 @@ invariance and temporal isolation. See [methods](FORECASTING.md) and [ADR 0004](
 ## M3 — research workspace
 
 Delivered alongside M2: responsive workspace, model comparison, uncertainty charts,
-saved-run browsing and exports. Remaining: scenario editor, run cancellation,
+saved-run browsing and exports. The September expansion adds BLS/ECB sources,
+historical mean/autoregression, validation ranks, readiness guidance and a full
+discovery/navigation pass. See [source research and priorities](SOURCE_RESEARCH.md).
+Remaining: scenario editor, run cancellation,
 multivariate/exogenous models and saved research notes. Continue accessibility review.
 
 ## M4 — distribution

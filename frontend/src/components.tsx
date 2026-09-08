@@ -122,6 +122,37 @@ export function SourceDialog({ close }: { close: () => void }) {
           Explore World Bank ↗
         </a>
       </div>
+      <div className="guide-source">
+        <strong>Bureau of Labor Statistics</strong>
+        <p>
+          Direct monthly labor and price data. Search 10 supported indicators,
+          including payrolls, participation and earnings. Each load retrieves
+          the latest 10 calendar years; unregistered access allows 25 requests
+          per day.
+        </p>
+        <a
+          href="https://www.bls.gov/developers/"
+          target="_blank"
+          rel="noreferrer"
+        >
+          BLS API & coverage ↗
+        </a>
+      </div>
+      <div className="guide-source">
+        <strong>European Central Bank</strong>
+        <p>
+          Monthly average reference exchange rates, quoted as foreign currency
+          per euro. Search 21 currencies or enter an exact monthly EXR.M key. No
+          API key required.
+        </p>
+        <a
+          href="https://data.ecb.europa.eu/help/api/overview"
+          target="_blank"
+          rel="noreferrer"
+        >
+          ECB Data Portal ↗
+        </a>
+      </div>
       <p className="small">
         Data reflects the latest provider revision. Missing values remain
         missing. Historical forecast evaluations use latest revisions and are

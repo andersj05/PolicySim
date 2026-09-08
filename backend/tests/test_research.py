@@ -288,6 +288,16 @@ def test_import_analysis_forecast_api_roundtrip(
     snapshot = response.json()
     assert snapshot["series"]["provider"] == "local"
     identifier = snapshot["snapshot_id"]
+    readiness_result = client.post(
+        "/api/v1/forecast-readiness",
+        json={
+            "snapshot_id": identifier,
+            "horizon": 2,
+            "folds": 2,
+        },
+    )
+    assert readiness_result.status_code == 200
+    assert readiness_result.json()["ready"] and readiness_result.json()["periods"] == 48
     assert client.get(f"/api/v1/snapshots/{identifier}").json() == snapshot
     assert "date,value" in client.get(f"/api/v1/snapshots/{identifier}/csv").text
     params = {"snapshot_id": identifier, "transform": "difference"}

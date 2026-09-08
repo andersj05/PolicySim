@@ -22,16 +22,16 @@ MAX_PAGES = 100
 PAGE_SIZE = 20
 
 
-def fetch(base: str, path: str, params: dict[str, str | int]) -> tuple[Any, bytes]:
+def fetch_bytes(base: str, path: str, params: dict[str, str | int]) -> bytes:
     request = Request(
         base + path + "?" + urlencode(params), headers={"User-Agent": "PolicySim/0.1"}
     )
     try:
         with urlopen(request, timeout=30) as response:
-            body = response.read(32 * 1024 * 1024 + 1)
+            body: bytes = response.read(32 * 1024 * 1024 + 1)
         if len(body) > 32 * 1024 * 1024:
             raise DataError("The provider response is too large. Try a narrower date range.")
-        return json.loads(body), body
+        return body
     except HTTPError as exc:
         if exc.code == 429:
             raise DataError(
@@ -48,6 +48,12 @@ def fetch(base: str, path: str, params: dict[str, str | int]) -> tuple[Any, byte
         raise DataError(
             "The data provider is unreachable or timed out. Please retry.", 504
         ) from None
+
+
+def fetch(base: str, path: str, params: dict[str, str | int]) -> tuple[Any, bytes]:
+    body = fetch_bytes(base, path, params)
+    try:
+        return json.loads(body), body
     except (ValueError, UnicodeDecodeError):
         raise DataError("The data provider returned an unreadable response.") from None
 
@@ -151,6 +157,10 @@ catalog = Catalog()
 
 
 def search(provider: str, query: str, page: int) -> SearchResult:
+    if provider in ("bls", "ecb"):
+        from policysim.official_providers import search_official
+
+        return search_official(provider, query, page)
     offset = (page - 1) * PAGE_SIZE
     if provider == "fred":
         payload, _ = fred(
@@ -207,6 +217,10 @@ def number(value: Any) -> float | None:
 def load(
     provider: str, series_id: str, country: str, source_id: str, start: str, end: str
 ) -> Snapshot:
+    if provider in ("bls", "ecb"):
+        from policysim.official_providers import load_official
+
+        return load_official(provider, series_id, start, end)
     raw: list[bytes] = []
     observations: list[Observation] = []
     if provider == "fred":

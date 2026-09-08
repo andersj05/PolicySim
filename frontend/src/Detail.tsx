@@ -24,7 +24,9 @@ export default function Detail({
   const [refresh, setRefresh] = useState(0);
   const [tab, setTab] = useState<'data' | 'statistics' | 'forecast'>('data');
   const [range, setRange] = useState(
-    selected.provider === 'fred' ? '10Y' : 'MAX',
+    selected.provider === 'worldbank' || selected.provider === 'local'
+      ? 'MAX'
+      : '10Y',
   );
   const [custom, setCustom] = useState({ start: '', end: '' });
   const [draft, setDraft] = useState(custom);
@@ -52,7 +54,10 @@ export default function Detail({
   const saved =
     data && library.some((entry) => entry.snapshot_id === data.snapshot_id);
   return (
-    <article className="detail" aria-busy={loading}>
+    <article
+      className={`detail ${tab === 'forecast' ? 'with-forecast' : ''}`}
+      aria-busy={loading}
+    >
       <div className="detail-top">
         <span className={`source-label ${selected.provider}`}>
           <span />
@@ -180,7 +185,16 @@ export default function Detail({
             </details>
           </div>
           <div hidden={tab !== 'forecast'}>
-            <Forecast snapshot={data} start={start} end={end} />
+            <Forecast
+              snapshot={data}
+              start={start}
+              end={end}
+              applyRange={(from, to) => {
+                setCustom({ start: from, end: to });
+                setDraft({ start: from, end: to });
+                setRange('Custom');
+              }}
+            />
           </div>
           <div hidden={tab === 'forecast'}>
             <AnalysisView
@@ -223,6 +237,13 @@ export default function Detail({
               <div>
                 <dt>Source transformations</dt>
                 <dd>{data.transformations.join(' ') || 'None'}</dd>
+              </div>
+              <div>
+                <dt>Requested source range</dt>
+                <dd>
+                  {data.requested_start || 'All available'} →{' '}
+                  {data.requested_end || 'Latest'}
+                </dd>
               </div>
               <div>
                 <dt>Updated</dt>

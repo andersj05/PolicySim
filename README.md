@@ -1,7 +1,8 @@
 # PolicySim
 
 A local research workspace for economic data, reproducible simulations and forecasting.
-Search FRED and World Bank, import CSV data, inspect and transform series, and
+Search FRED, World Bank, supported BLS indicators and monthly ECB currencies,
+import CSV data, inspect and transform series, and
 compare configurable statistical forecasts with baselines and prediction intervals.
 Save input snapshots and forecast runs locally with their provenance.
 
@@ -12,6 +13,7 @@ Save input snapshots and forecast runs locally with their provenance.
 - [Architecture](docs/ARCHITECTURE.md), [design](docs/DESIGN.md), [research standards](docs/RESEARCH.md)
 - [Persistent memory](docs/memory/README.md) and [agent instructions](AGENTS.md)
 - [Forecasting methods and workflow](docs/FORECASTING.md)
+- [Source coverage and researched next features](docs/SOURCE_RESEARCH.md)
 
 ## Quick start
 
@@ -24,9 +26,9 @@ python scripts/project.py dev
 ```
 
 Open <http://127.0.0.1:5173>. API docs: <http://127.0.0.1:8000/docs>.
-Ctrl+C stops both servers. World Bank works without credentials. For FRED, copy
+Ctrl+C stops both servers. World Bank, BLS and ECB work without credentials. For FRED, copy
 `.env.example` to `.env` and add `FRED_API_KEY` on the backend. Never use frontend
-environment variables for keys. Both data providers need internet access.
+environment variables for keys. All remote data providers need internet access.
 
 Search by keyword or series ID, or choose one of the suggested starting points.
 World Bank supports country/aggregate selection across its Indicators API catalog.
@@ -35,9 +37,12 @@ Exact provider responses are saved under ignored `data/` with SHA-256 checksums.
 Latest revisions are not historical vintages for backtesting.
 
 Choose **Statistics** for descriptive statistics, autocorrelation and ADF diagnostics.
-Choose **Forecast** for naive, drift, seasonal naive, ETS and ARIMA/SARIMA models.
+Choose **Forecast** for naive, historical mean, drift, seasonal naive, ETS,
+ARIMA/SARIMA and autoregression models.
 Set a horizon and date range, then compare rolling validation and a separate final
-holdout. Saved runs reopen from **Forecasts**. The engine rejects internal gaps;
+holdout. Validation ranks and skill compare methods against naive. Saved runs reopen
+from **Saved forecasts**. Readiness checks can suggest a complete date segment.
+The engine rejects internal gaps;
 no missing observations are silently filled. See the methods guide for limits.
 
 ```sh
