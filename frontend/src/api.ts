@@ -1,26 +1,50 @@
 import { useEffect, useState } from 'react';
 
-export async function post<T>(
-  url: string,
-  body: unknown,
-  signal?: AbortSignal,
-): Promise<T> {
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-    signal,
-  });
-  const payload: unknown = await response.json();
+function requestError(error: unknown): string {
+  return error instanceof Error && !(error instanceof TypeError)
+    ? error.message
+    : 'Cannot reach the research server. Check that the app is running and retry.';
+}
+
+async function responsePayload(response: Response): Promise<unknown> {
+  let payload: unknown;
+  try {
+    payload = await response.json();
+  } catch {
+    throw new Error(
+      'The research server returned an incomplete response. Please retry.',
+    );
+  }
   if (!response.ok) {
-    const detail = (payload as { detail?: unknown }).detail;
+    const detail =
+      payload && typeof payload === 'object' && 'detail' in payload
+        ? payload.detail
+        : undefined;
     throw new Error(
       typeof detail === 'string'
         ? detail
         : 'Check the selected inputs and retry.',
     );
   }
-  return payload as T;
+  return payload;
+}
+
+export async function post<T>(
+  url: string,
+  body: unknown,
+  signal?: AbortSignal,
+): Promise<T> {
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal,
+    });
+    return (await responsePayload(response)) as T;
+  } catch (error) {
+    throw new Error(requestError(error), { cause: error });
+  }
 }
 
 export function useAnalysis<T>(url: string, body: unknown) {
@@ -69,15 +93,7 @@ export function useRemote<T>(url: string | null, refresh = 0) {
     async function load() {
       try {
         const response = await fetch(url!, { signal: controller.signal });
-        const payload: unknown = await response.json();
-        if (!response.ok) {
-          const detail = (payload as { detail?: unknown }).detail;
-          throw new Error(
-            typeof detail === 'string'
-              ? detail
-              : 'This request could not be completed. Check the inputs and retry.',
-          );
-        }
+        const payload = await responsePayload(response);
         if (!controller.signal.aborted)
           setResult({ url: url!, refresh, data: payload as T });
       } catch (error) {
@@ -85,10 +101,7 @@ export function useRemote<T>(url: string | null, refresh = 0) {
           setResult({
             url: url!,
             refresh,
-            error:
-              error instanceof Error
-                ? error.message
-                : 'Unable to reach the research server.',
+            error: requestError(error),
           });
       }
     }

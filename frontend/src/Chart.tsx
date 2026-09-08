@@ -16,11 +16,13 @@ export default function Chart({
   observations,
   title,
   forecast = [],
+  comparison = [],
   interval = 95,
 }: {
   observations: Observation[];
   title: string;
   forecast?: ForecastPoint[];
+  comparison?: ForecastPoint[];
   interval?: number;
 }) {
   const [hover, setHover] = useState<number | null>(null);
@@ -38,6 +40,7 @@ export default function Chart({
   const values = [
     ...all.flatMap((row) => (row.value === null ? [] : [row.value])),
     ...forecast.flatMap((row) => [row.lower, row.upper]),
+    ...comparison.flatMap((row) => [row.value, row.lower, row.upper]),
   ];
   if (!values.length)
     return (
@@ -93,6 +96,25 @@ export default function Chart({
       ' Z'
     : '';
   const point = hover === null ? undefined : all[hover];
+  const comparisonX = (row: ForecastPoint) =>
+    x(all.findIndex((item) => item.date === row.date));
+  const comparisonPath = comparison
+    .map((row, i) => `${i ? 'L' : 'M'}${comparisonX(row)},${y(row.value)}`)
+    .join(' ');
+  const comparisonBand = comparison.length
+    ? comparison
+        .map((row, i) => `${i ? 'L' : 'M'}${comparisonX(row)},${y(row.upper)}`)
+        .join(' ') +
+      ' ' +
+      [...comparison]
+        .reverse()
+        .map((row) => `L${comparisonX(row)},${y(row.lower)}`)
+        .join(' ') +
+      ' Z'
+    : '';
+  const compared = point
+    ? comparison.find((row) => row.date === point.date)
+    : undefined;
   const future =
     hover !== null && hover >= observations.length
       ? forecast[hover - observations.length]
@@ -120,6 +142,11 @@ export default function Chart({
                 {formatValue(future.upper)}
               </span>
             )}
+            {compared && (
+              <span className="readout-interval">
+                Predicted: {formatValue(compared.value)}
+              </span>
+            )}
           </>
         ) : (
           <span>Hover or use arrow keys to inspect</span>
@@ -129,7 +156,7 @@ export default function Chart({
         viewBox={`0 0 ${width} 302`}
         role="img"
         tabIndex={0}
-        aria-label={`${title}. ${observations.length} observations${forecast.length ? ` and ${forecast.length} forecast periods with ${interval}% prediction intervals` : ''}. Use arrow keys to inspect; exact values are in the table.`}
+        aria-label={`${title}. ${observations.length} observations${forecast.length ? ` and ${forecast.length} forecast periods with ${interval}% prediction intervals` : ''}${comparison.length ? ` compared with holdout predictions and ${interval}% intervals` : ''}. Use arrow keys to inspect; exact values are in the table.`}
         onBlur={() => setHover(null)}
         onKeyDown={(event) => {
           if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) {
@@ -209,6 +236,18 @@ export default function Chart({
           );
         })}
         {band && <path d={band} fill="var(--forecast)" fillOpacity=".13" />}
+        {comparisonBand && (
+          <path d={comparisonBand} fill="var(--forecast)" fillOpacity=".13" />
+        )}
+        {comparisonPath && (
+          <path
+            d={comparisonPath}
+            fill="none"
+            stroke="var(--forecast)"
+            strokeWidth="2.3"
+            strokeDasharray="5 4"
+          />
+        )}
         <path
           d={path}
           fill="none"

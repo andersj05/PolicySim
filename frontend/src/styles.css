@@ -155,7 +155,7 @@ pre {
 }
 .mono {
   font-family: 'SFMono-Regular', Consolas, monospace;
-  font-size: 10px;
+  font-size: 11px;
   overflow-wrap: anywhere;
 }
 .app-shell {
@@ -233,7 +233,7 @@ pre {
   align-items: center;
   justify-content: space-between;
   color: #68766e;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   margin: 38px 12px 13px;
 }
@@ -275,7 +275,7 @@ pre {
 .library-item small {
   display: block;
   color: #68766e;
-  font-size: 9px;
+  font-size: 11px;
   margin-top: 4px;
 }
 .remove-saved {
@@ -294,7 +294,7 @@ pre {
   padding-top: 30px;
 }
 .connection-status {
-  font-size: 10px;
+  font-size: 11px;
   color: #68766e;
   display: flex;
   align-items: center;
@@ -340,6 +340,13 @@ pre {
 .mobile-nav,
 .mobile-help {
   display: none !important;
+}
+.compact-library {
+  display: none;
+}
+::placeholder {
+  color: #68766e;
+  opacity: 1;
 }
 main {
   max-width: 1680px;
@@ -478,7 +485,7 @@ kbd {
   white-space: nowrap;
   font: 8px inherit;
   font-family: inherit;
-  font-size: 8px;
+  font-size: 11px;
   background: #f5f7f5;
   border: 1px solid #e9eee8;
   border-radius: 3px;
@@ -491,12 +498,12 @@ kbd {
   padding: 27px 23px 13px;
 }
 .catalog-heading h2 {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   color: #68766e;
 }
 .count {
-  font-size: 10px;
+  font-size: 11px;
   color: #68766e;
   font-variant-numeric: tabular-nums;
 }
@@ -540,16 +547,16 @@ kbd {
   flex-wrap: wrap;
   gap: 5px 10px;
   color: #68766e;
-  font-size: 10px;
+  font-size: 11px;
   line-height: 1.4;
 }
 .result-meta .mono {
-  font-size: 9px;
+  font-size: 11px;
 }
 .catalog-source-link {
   margin: auto 15px 0;
   padding: 24px 2px;
-  font-size: 10px;
+  font-size: 11px;
   justify-content: flex-start;
 }
 .catalog-source-link svg:last-child {
@@ -579,7 +586,7 @@ kbd {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 10px;
+  font-size: 11px;
   color: #68766e;
 }
 .source-label > span {
@@ -614,7 +621,7 @@ kbd {
 }
 .series-context {
   color: #68766e;
-  font-size: 10px;
+  font-size: 11px;
   margin-top: 10px;
 }
 .metric-row {
@@ -646,7 +653,7 @@ kbd {
 .latest-label span {
   display: block;
   color: #68766e;
-  font-size: 10px;
+  font-size: 11px;
   margin-bottom: 7px;
 }
 .latest-label strong {
@@ -679,7 +686,7 @@ kbd {
 }
 .detail-tabs > a {
   padding-right: 0;
-  font-size: 10px;
+  font-size: 11px;
 }
 .date-toolbar {
   display: flex;
@@ -698,7 +705,7 @@ kbd {
   color: #68766e;
   padding: 6px 10px;
   border-radius: 4px;
-  font-size: 10px;
+  font-size: 11px;
 }
 .ranges button[aria-pressed='true'] {
   color: #2d724c;
@@ -709,7 +716,7 @@ kbd {
   text-align: right;
 }
 .custom-dates summary {
-  font-size: 10px;
+  font-size: 11px;
   padding: 6px 0;
 }
 .custom-dates form {
@@ -734,14 +741,14 @@ kbd {
   min-width: 160px;
 }
 .analysis-toolbar label {
-  font-size: 10px;
+  font-size: 11px;
 }
 .short-field {
   width: 66px;
 }
 .frequency-details summary {
   padding: 9px 0;
-  font-size: 10px;
+  font-size: 11px;
 }
 .frequency-details[open] {
   padding: 0 5px;
@@ -766,7 +773,7 @@ kbd {
   background: none;
   padding: 7px 9px;
   color: #68766e;
-  font-size: 10px;
+  font-size: 11px;
   border-radius: 3px;
 }
 .view-switch button[aria-pressed='true'] {
@@ -785,12 +792,12 @@ kbd {
 }
 .chart-wrap text {
   font-family: inherit;
-  font-size: 10px;
+  font-size: 11px;
   fill: #68766e;
 }
 .chart-wrap .forecast-label {
   fill: #68766e;
-  font-size: 9px;
+  font-size: 11px;
 }
 .grid-line {
   stroke: #e9eee9;
@@ -809,7 +816,7 @@ kbd {
   flex-wrap: wrap;
   gap: 10px;
   color: #68766e;
-  font-size: 10px;
+  font-size: 11px;
   padding-left: 8px;
   font-variant-numeric: tabular-nums;
 }
@@ -826,7 +833,7 @@ kbd {
   align-items: center;
   gap: 12px;
   color: #68766e;
-  font-size: 10px;
+  font-size: 11px;
   padding: 10px 0 5px;
   flex-wrap: wrap;
 }
@@ -838,7 +845,7 @@ kbd {
   max-width: 60%;
 }
 .chart-footnote button {
-  font-size: 10px;
+  font-size: 11px;
   padding-right: 0;
 }
 .legend-line {
@@ -879,7 +886,7 @@ kbd {
 }
 .provenance > summary > span {
   float: right;
-  font-size: 10px;
+  font-size: 11px;
 }
 .provenance dl {
   display: grid;
@@ -888,7 +895,7 @@ kbd {
   margin: 8px 0 18px;
 }
 .provenance dt {
-  font-size: 10px;
+  font-size: 11px;
   color: #68766e;
   margin-bottom: 6px;
 }
@@ -923,7 +930,7 @@ table {
 }
 th {
   color: #68766e;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 500;
   background: #f7f9f6;
 }
@@ -946,6 +953,8 @@ th button {
 }
 .table-tools {
   display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
   justify-content: space-between;
   align-items: center;
   margin: 17px 0 12px;
@@ -964,11 +973,11 @@ th button {
 }
 .inline-label select {
   padding: 5px;
-  font-size: 10px;
+  font-size: 11px;
 }
 .missing-value {
   color: #68766e;
-  font-size: 10px;
+  font-size: 11px;
 }
 .pagination {
   display: flex;
@@ -977,7 +986,7 @@ th button {
   gap: 6px;
   padding: 16px 5px;
   color: #68766e;
-  font-size: 10px;
+  font-size: 11px;
 }
 .pagination button {
   border: 1px solid #e2e8df;
@@ -985,7 +994,7 @@ th button {
   padding: 6px 8px;
   border-radius: 4px;
   color: #61785e;
-  font-size: 10px;
+  font-size: 11px;
 }
 .catalog .pagination {
   padding: 15px;
@@ -1017,7 +1026,7 @@ th button {
 }
 .stat-cell > span {
   display: block;
-  font-size: 10px;
+  font-size: 11px;
   color: #68766e;
   margin-bottom: 8px;
 }
@@ -1052,7 +1061,7 @@ th button {
   color: #556d50;
 }
 .section-label > span {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 400;
   color: #68766e;
 }
@@ -1064,14 +1073,14 @@ th button {
   font-variant-numeric: tabular-nums;
 }
 .test-value span {
-  font-size: 10px;
+  font-size: 11px;
   color: #68766e;
   letter-spacing: 0;
   margin-left: 8px;
 }
 .compact-dl {
   margin: 16px 0;
-  font-size: 10px;
+  font-size: 11px;
 }
 .compact-dl > div {
   display: flex;
@@ -1103,7 +1112,7 @@ th button {
   bottom: 0;
   width: 100%;
   text-align: center;
-  font-size: 8px;
+  font-size: 11px;
   color: #68766e;
 }
 .acf-bar {
@@ -1170,7 +1179,7 @@ th button {
   gap: 8px;
 }
 .model-option strong small {
-  font-size: 8px;
+  font-size: 11px;
   color: #68766e;
   background: #e7f1e4;
   border-radius: 3px;
@@ -1179,7 +1188,7 @@ th button {
 }
 .model-option > span > span {
   display: block;
-  font-size: 9px;
+  font-size: 11px;
   line-height: 1.5;
   color: #68766e;
   margin-top: 5px;
@@ -1190,7 +1199,7 @@ th button {
   gap: 17px 13px;
 }
 .field-help {
-  font-size: 10px;
+  font-size: 11px;
   margin-top: 14px;
 }
 .evaluation-strip {
@@ -1204,7 +1213,7 @@ th button {
   color: #68766e;
   padding: 9px 3px;
   text-align: center;
-  font-size: 9px;
+  font-size: 11px;
   border-radius: 3px;
 }
 .evaluation-strip span:first-child {
@@ -1244,7 +1253,7 @@ th button {
   margin-bottom: 16px;
 }
 .order-grid label {
-  font-size: 9px;
+  font-size: 11px;
 }
 .run-actions {
   display: flex;
@@ -1254,7 +1263,7 @@ th button {
   margin: 23px 0;
 }
 .run-actions > .small {
-  font-size: 10px;
+  font-size: 11px;
 }
 .result-select {
   display: flex;
@@ -1272,7 +1281,7 @@ th button {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 10px;
+  font-size: 11px;
   color: #68766e;
   padding: 8px 0;
 }
@@ -1312,7 +1321,7 @@ th button {
 }
 .forecast-metrics span {
   display: block;
-  font-size: 9px;
+  font-size: 11px;
   color: #68766e;
 }
 .forecast-metrics strong {
@@ -1327,7 +1336,7 @@ th button {
 }
 .forecast-metrics small {
   display: block;
-  font-size: 9px;
+  font-size: 11px;
   color: #68766e;
   line-height: 1.6;
 }
@@ -1348,14 +1357,14 @@ th button {
   gap: 10px;
 }
 .forecast-chart-toolbar .small {
-  font-size: 10px;
+  font-size: 11px;
 }
 .forecast-legend {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 24px;
-  font-size: 10px;
+  font-size: 11px;
   color: #68766e;
   margin: 16px 0 23px;
 }
@@ -1397,7 +1406,7 @@ th button {
 }
 .evaluation-note {
   margin: 14px 0 26px;
-  font-size: 10px;
+  font-size: 11px;
 }
 .horizon-bars {
   display: grid;
@@ -1409,7 +1418,7 @@ th button {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 10px;
+  font-size: 11px;
 }
 .horizon-bars span {
   width: 23px;
@@ -1439,7 +1448,7 @@ th button {
   padding-top: 14px;
 }
 .run-notices p {
-  font-size: 10px;
+  font-size: 11px;
   color: #68766e;
   margin: 4px 0;
 }
@@ -1471,7 +1480,7 @@ th button {
   text-align: left;
   padding-bottom: 15px;
   color: #68766e;
-  font-size: 10px;
+  font-size: 11px;
 }
 .runs-page,
 .saved-run-view {
@@ -1540,7 +1549,7 @@ th button {
   margin-top: 7px;
 }
 .run-card small {
-  font-size: 10px;
+  font-size: 11px;
 }
 .run-card-icon {
   color: #68766e;
@@ -1549,7 +1558,7 @@ th button {
   border-radius: 9px;
 }
 .run-date {
-  font-size: 10px;
+  font-size: 11px;
   color: #68766e;
   margin-left: auto;
   display: flex;
@@ -1727,7 +1736,7 @@ dialog p {
   font-weight: 500;
 }
 .file-drop span {
-  font-size: 10px;
+  font-size: 11px;
 }
 .file-drop input {
   position: absolute;
@@ -1843,10 +1852,15 @@ dialog p {
     padding: 10px;
   }
   .model-option strong {
-    font-size: 10px;
+    font-size: 11px;
   }
 }
 @media (max-width: 1020px) {
+  .compact-library {
+    display: flex;
+    margin-bottom: 15px;
+    max-width: 350px;
+  }
   .sidebar {
     width: 64px;
     padding: 30px 7px;
@@ -1890,7 +1904,7 @@ dialog p {
     margin: 0;
   }
   .model-option > span > span {
-    font-size: 9px;
+    font-size: 11px;
   }
   .forecast-settings {
     margin-top: 10px;
@@ -1899,7 +1913,7 @@ dialog p {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
   .forecast-settings label {
-    font-size: 9px;
+    font-size: 11px;
   }
   .diagnostic-grid {
     grid-template-columns: 1fr;
@@ -1921,7 +1935,7 @@ dialog p {
   }
   .run-date {
     max-width: 140px;
-    font-size: 9px;
+    font-size: 11px;
   }
   .analysis-toolbar {
     flex-wrap: wrap;
@@ -1959,7 +1973,7 @@ dialog p {
     gap: 2px;
   }
   .mobile-nav button {
-    font-size: 10px;
+    font-size: 11px;
     border: 0;
     background: none;
     padding: 7px;
@@ -1978,7 +1992,7 @@ dialog p {
   }
   .topbar .secondary {
     padding: 7px 9px;
-    font-size: 10px;
+    font-size: 11px;
   }
   .topbar .secondary svg {
     width: 13px;
@@ -2021,7 +2035,7 @@ dialog p {
     font-size: 11px;
   }
   .result-meta {
-    font-size: 9px;
+    font-size: 11px;
   }
   .catalog-source-link {
     display: none;
@@ -2048,7 +2062,7 @@ dialog p {
     gap: 8px;
   }
   .detail-top .mono {
-    font-size: 9px;
+    font-size: 11px;
   }
   .detail-tabs {
     gap: 24px;
@@ -2061,7 +2075,7 @@ dialog p {
   }
   .latest-label span,
   .latest-label strong {
-    font-size: 9px;
+    font-size: 11px;
   }
   .analysis-toolbar {
     gap: 8px;
@@ -2076,11 +2090,11 @@ dialog p {
     order: 4;
   }
   .analysis-toolbar label {
-    font-size: 9px;
+    font-size: 11px;
   }
   .view-switch button {
     padding: 7px;
-    font-size: 9px;
+    font-size: 11px;
   }
   .chart-footnote {
     gap: 8px;
@@ -2089,20 +2103,20 @@ dialog p {
     max-width: 100%;
   }
   .chart-readout {
-    font-size: 9px;
+    font-size: 11px;
     height: 42px;
   }
   .chart-readout strong {
     font-size: 11px;
   }
   .chart-wrap text {
-    font-size: 9px;
+    font-size: 11px;
   }
   .provenance dl {
     grid-template-columns: 1fr;
   }
   .model-option strong {
-    font-size: 10px;
+    font-size: 11px;
     flex-wrap: wrap;
     gap: 4px;
   }
@@ -2114,7 +2128,7 @@ dialog p {
     grid-template-columns: 1fr 1fr;
   }
   .forecast-settings label {
-    font-size: 10px;
+    font-size: 11px;
   }
   .advanced-grid {
     grid-template-columns: 1fr;
@@ -2123,7 +2137,7 @@ dialog p {
     width: 175px;
   }
   .result-select a {
-    font-size: 10px;
+    font-size: 11px;
   }
   .saved-state {
     display: none;
@@ -2133,7 +2147,7 @@ dialog p {
   }
   .results-tabs button {
     padding: 8px 9px;
-    font-size: 10px;
+    font-size: 11px;
   }
   .forecast-metrics {
     grid-template-columns: 1fr 1fr;
@@ -2157,14 +2171,14 @@ dialog p {
   }
   .forecast-legend {
     gap: 15px;
-    font-size: 9px;
+    font-size: 11px;
   }
   .forecast-chart-toolbar .small {
     max-width: 50%;
-    font-size: 9px;
+    font-size: 11px;
   }
   .forecast-chart-toolbar .ranges button {
-    font-size: 9px;
+    font-size: 11px;
     padding: 5px 7px;
   }
   .run-actions {
@@ -2173,7 +2187,7 @@ dialog p {
   }
   .run-actions > .small {
     margin-right: auto;
-    font-size: 9px;
+    font-size: 11px;
   }
   .evaluation-heading {
     flex-wrap: wrap;
@@ -2233,13 +2247,13 @@ dialog p {
     max-width: 135px;
   }
   .analysis-notes summary {
-    font-size: 10px;
+    font-size: 11px;
   }
   dialog {
     padding: 23px;
   }
   .import-dialog label {
-    font-size: 10px;
+    font-size: 11px;
   }
 }
 @media (prefers-reduced-motion: reduce) {

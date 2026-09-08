@@ -124,8 +124,8 @@ export function SourceDialog({ close }: { close: () => void }) {
       </div>
       <p className="small">
         Data reflects the latest provider revision. Missing values remain
-        missing. This workspace does not yet run simulations or vintage-correct
-        backtests.
+        missing. Historical forecast evaluations use latest revisions and are
+        not vintage-correct backtests.
       </p>
     </dialog>
   );

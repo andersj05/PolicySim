@@ -179,21 +179,17 @@ export default function Detail({
               </form>
             </details>
           </div>
-          {tab === 'forecast' ? (
-            <Forecast
-              key={`${data.snapshot_id}-${start}-${end}`}
-              snapshot={data}
-              start={start}
-              end={end}
-            />
-          ) : (
+          <div hidden={tab !== 'forecast'}>
+            <Forecast snapshot={data} start={start} end={end} />
+          </div>
+          <div hidden={tab === 'forecast'}>
             <AnalysisView
               snapshot={data}
               start={start}
               end={end}
               statistics={tab === 'statistics'}
             />
-          )}
+          </div>
           <details className="provenance">
             <summary>
               Source & details{' '}

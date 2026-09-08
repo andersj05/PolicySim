@@ -14,6 +14,7 @@ export default function DataTable({
   const [sort, setSort] = useState<'date' | 'value'>('date');
   const [ascending, setAscending] = useState(false);
   const [missingOnly, setMissingOnly] = useState(false);
+  const [precision, setPrecision] = useState(false);
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(20);
   const rows = observations
@@ -38,6 +39,14 @@ export default function DataTable({
   return (
     <div className="data-table">
       <div className="table-tools">
+        <label className="checkbox">
+          <input
+            type="checkbox"
+            checked={precision}
+            onChange={(event) => setPrecision(event.target.checked)}
+          />
+          Full precision
+        </label>
         <label className="checkbox">
           <input
             type="checkbox"
@@ -108,7 +117,7 @@ export default function DataTable({
                     <span className="missing-value">Missing</span>
                   ) : (
                     <span title={String(row.value)}>
-                      {formatValue(row.value)}
+                      {formatValue(row.value, false, precision)}
                     </span>
                   )}
                 </td>

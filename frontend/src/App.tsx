@@ -220,6 +220,28 @@ export default function App() {
           </div>
         </header>
         <main id="main">
+          {pageView === 'data' && library.length > 0 && (
+            <label className="compact-library">
+              Saved data
+              <select
+                value={selected.snapshot_id ?? ''}
+                onChange={(event) => {
+                  const item = library.find(
+                    (entry) => entry.snapshot_id === event.target.value,
+                  );
+                  if (item) pick(item);
+                }}
+              >
+                <option value="">Choose a saved series</option>
+                {library.map((item) => (
+                  <option key={pickKey(item)} value={item.snapshot_id}>
+                    {item.title}
+                    {item.country ? ` · ${item.country}` : ''}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
           {pageView === 'runs' ? (
             <Runs />
           ) : (

@@ -178,7 +178,9 @@ export default function ForecastResults({ run }: { run: ForecastRun }) {
                     Final holdout
                   </button>
                 </div>
-                <span className="small">Lower error is better</span>
+                <span className="small">
+                  {model[evaluation]?.count} predictions · {run.units}
+                </span>
               </div>
               <div className="table-region">
                 <table>
@@ -229,15 +231,33 @@ export default function ForecastResults({ run }: { run: ForecastRun }) {
                   : 'The final block follows validation. Repeated tuning against these results compromises holdout independence.'}
               </p>
               {evaluation === 'holdout' ? (
-                <Chart
-                  observations={model.holdout_points.map((point) => ({
-                    date: point.date,
-                    value: point.actual,
-                    realtime_start: '',
-                    realtime_end: '',
-                  }))}
-                  title={`${run.title}: holdout actuals`}
-                />
+                <>
+                  <Chart
+                    observations={model.holdout_points.map((point) => ({
+                      date: point.date,
+                      value: point.actual,
+                      realtime_start: '',
+                      realtime_end: '',
+                    }))}
+                    comparison={model.holdout_points}
+                    interval={run.request.interval}
+                    title={`${run.title}: holdout actuals and predictions`}
+                  />
+                  <div className="forecast-legend">
+                    <span>
+                      <i className="legend-line" />
+                      Actual
+                    </span>
+                    <span>
+                      <i className="legend-line forecast-line" />
+                      Predicted
+                    </span>
+                    <span>
+                      <i className="interval-swatch" />
+                      {run.request.interval}% interval
+                    </span>
+                  </div>
+                </>
               ) : (
                 <>
                   <div className="section-label">
