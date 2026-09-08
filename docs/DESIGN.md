@@ -1,7 +1,7 @@
 # Design direction
 
 Use Notion as inspiration for calm navigation, readable workspaces and progressive
-disclosure; Robinhood for numerical hierarchy, focused charts and simple primary
+disclosure; Spotify for surface hierarchy, accessible controls and simple primary
 actions. These are directional references, not copied assets or a final design.
 
 Primary loop: find a series → inspect provenance → define assumptions → run
@@ -21,9 +21,11 @@ analysis → compare outcomes → save a reproducible research record.
 
 ## Implemented explorer
 
-The workspace uses a compact sidebar, provider tabs, catalog search and a large
-series panel. Slogans, hero descriptions, source cards and repeated workspace
-labels were removed. Ctrl/Cmd+K focuses search. Data, Statistics and Forecast tabs
+The overview presents four source collections and the saved library. A dark sidebar
+anchors navigation around Overview, Data explorer and Saved forecasts. The data
+workspace uses provider tabs, catalog search and a large series panel; focus mode
+hides the catalog for more chart space. Ctrl/Cmd+K reveals and focuses search.
+Data, Statistics and Forecast tabs
 share the series context. Advanced parameters and provenance use disclosures.
 
 Saved-series shortcuts persist in browser storage, with a selector available when
@@ -33,8 +35,8 @@ use readable precision; exports preserve values. Forecast charts distinguish
 observations from dashed predictions and shaded intervals; holdout charts overlay
 actuals and predictions. Saved runs reopen without refitting.
 
-The layout stacks below 740px. Tables scroll inside their panels. Small labels use
-at least 11px with strengthened contrast. Model controls retain settings across
+The layout stacks below 740px. Tables scroll inside their panels. Metadata uses
+compact labels with strengthened contrast. Model controls retain settings across
 tab/date changes, and old results are labeled when their configuration is stale.
 
 Metadata suggestions are navigation shortcuts, not synthetic time series. Green
@@ -42,6 +44,12 @@ identifies the active series and does not judge an economic outcome. Chart gaps
 remain gaps; keyboard users can inspect every original value in the table. Loading,
 provider errors, empty searches and empty date ranges have explicit states.
 The source guide uses a native modal dialog with focus containment and Escape.
+
+Forecast setup provides calendar/sample readiness and an explicit action to apply
+a complete history segment. Result comparisons show ranks from validation only,
+even when the holdout view is open. Data headlines collapse in the Forecast tab
+to prioritize model controls and results. Shared controls remain in `styles.css`;
+`workbench.css` defines the navigation, discovery and refined workspace surfaces.
 
 Scenario editing remains future work. No formal accessibility certification is
 claimed; continue testing keyboard and assistive technology behavior as the workspace grows.

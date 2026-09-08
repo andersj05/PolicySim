@@ -2,7 +2,7 @@
 
 ## Workflow
 
-Open FRED or World Bank data, or import a comma-delimited UTF-8 CSV. CSV import
+Open FRED, World Bank, BLS or ECB data, or import a comma-delimited UTF-8 CSV. CSV import
 requires a date column, a numeric value column, units and an explicit frequency.
 The preview shows five rows. Blank, NA, N/A, null and dot values remain missing;
 duplicates within a period are rejected. The original uploaded text is saved
@@ -29,15 +29,17 @@ A small ADF p-value is evidence against its unit-root null, not a model-selectio
 
 ## Models
 
-The engine implements five univariate methods. Naive is included in every comparison.
+The engine implements seven univariate methods. Naive is included in every comparison.
 
-| Method         | Configuration                                 | Forecast behavior                                                          |
-| -------------- | --------------------------------------------- | -------------------------------------------------------------------------- |
-| Naive          | None                                          | Last observation; random-walk innovation variance                          |
-| Drift          | None                                          | Last observation plus average historical change                            |
-| Seasonal naive | Seasonal period m                             | Repeat the last m observations                                             |
-| ETS            | Additive trend, damping, additive seasonality | Estimated additive-error exponential smoothing                             |
-| ARIMA / SARIMA | p,d,q; P,D,Q,m; optional constant             | State-space maximum likelihood with stationarity/invertibility enforcement |
+| Method          | Configuration                                   | Forecast behavior                                                          |
+| --------------- | ----------------------------------------------- | -------------------------------------------------------------------------- |
+| Naive           | None                                            | Last observation; random-walk innovation variance                          |
+| Historical mean | None                                            | Constant sample mean; innovation and sample-mean estimation variance       |
+| Autoregression  | 1–24 consecutive lags; constant or linear trend | OLS autoregression; stable roots and full-rank design required             |
+| Drift           | None                                            | Last observation plus average historical change                            |
+| Seasonal naive  | Seasonal period m                               | Repeat the last m observations                                             |
+| ETS             | Additive trend, damping, additive seasonality   | Estimated additive-error exponential smoothing                             |
+| ARIMA / SARIMA  | p,d,q; P,D,Q,m; optional constant               | State-space maximum likelihood with stationarity/invertibility enforcement |
 
 Seasonal period is user-selected: 1 is nonseasonal, 4 can represent annual cycles
 in quarterly data, and 12 can represent annual cycles in monthly data. This is not
@@ -61,17 +63,27 @@ There is no automated hyperparameter search or automatic selection. The final fu
 forecast refits each successful model on all selected observations. Repeated manual
 tuning against the holdout undermines its independence.
 
-Results report MAE, RMSE, MASE, observed interval coverage, and validation errors by
+Results report MAE, RMSE, MASE, bias (forecast minus actual), observed interval coverage, and validation errors by
 forecast horizon. MASE divides absolute errors by training-only mean absolute lag-m
 changes; m=1 gives the nonseasonal scale. Zero or numerically unusable scaling makes
 MASE unavailable. Coverage from a small number of predictions is not a calibration
 guarantee. Comparisons of errors in different source units are not meaningful.
 
+Successful models are ranked by validation RMSE, with equal errors sharing rank.
+RMSE skill is `1 − model_validation_RMSE / naive_validation_RMSE`; positive values
+mean lower validation error than naive. It is undefined when naive RMSE is zero.
+Holdout metrics never determine ranks or skill. A model that fails any required
+fit is excluded from the comparison, with its reason retained. Older saved runs
+remain readable, with newly introduced ranks and bias shown as unavailable.
+
 Prediction intervals use 80% or 95% Gaussian quantiles. Benchmarks implement analytical
 forecast-error variances, including horizon growth and drift-estimation uncertainty.
-ETS and SARIMA use statsmodels analytical prediction variances. Intervals are
-conditional on fitted models and parameters; they omit model/parameter uncertainty,
-future structural breaks and revisions. They are not causal policy scenarios.
+ETS, SARIMA and autoregression use statsmodels analytical prediction variances.
+Autoregression uses fitted innovation variance propagated through AR coefficients,
+excluding coefficient uncertainty. Historical mean variance is sample variance
+times `(1 + 1/n)`; drift also includes drift-estimation uncertainty. Other intervals
+condition on fitted parameters. All omit model uncertainty, future structural breaks
+and revisions. They are not causal policy scenarios.
 
 The final fit includes residual mean and an approximate Ljung–Box diagnostic.
 The lag is min(10, floor(residual_count/5)); ARIMA adjusts for AR/MA orders and ETS
@@ -88,9 +100,18 @@ edge-trimming policy records the excluded periods and resulting forecast origin.
 Trading-day calendars and mixed frequencies are unsupported. A complete selected
 range is required; the engine does not impute data.
 
+Readiness checks the selected calendar and baseline sample requirement without
+fitting models. When gaps prevent forecasting, it can suggest the longest complete
+segment (latest segment on ties), if long enough and within the local size bound.
+The user explicitly applies this range; the original snapshot is unchanged. The
+new end date becomes the forecast origin, which may precede the latest observation.
+Individual seasonal or high-order models may still require more training data.
+
 Local forecast limits: 2,000 selected periods, horizon 1–36, 2–5 validation windows,
 and seasonal period 1–24. The initial training window needs at least 20 observations;
 seasonal models need three cycles and higher ARIMA orders impose additional limits.
+Autoregression needs at least `max(20, 5 * (lags + trend_terms) + lags)` training
+observations; `trend_terms` is 1 for a constant and 2 with a linear trend.
 Only one forecast runs at a time. Requests are synchronous; navigating away does not
 cancel server computation, and completed runs are saved. Worker cancellation,
 multi-user job isolation, multivariate models and exogenous inputs remain future work.
@@ -110,6 +131,7 @@ at each origin. Floating-point output can vary slightly across platforms.
 - [Residual diagnostics](https://otexts.com/fpp3/diagnostics.html)
 - [statsmodels ETS](https://www.statsmodels.org/stable/examples/notebooks/generated/ets.html)
 - [statsmodels SARIMAX](https://www.statsmodels.org/stable/generated/statsmodels.tsa.statespace.sarimax.SARIMAX.html)
+- [statsmodels AutoReg](https://www.statsmodels.org/stable/generated/statsmodels.tsa.ar_model.AutoReg.html)
 - [ADF implementation](https://www.statsmodels.org/stable/generated/statsmodels.tsa.stattools.adfuller.html)
 
 The committed lock selects statsmodels 0.14.6. Installed APIs and deterministic

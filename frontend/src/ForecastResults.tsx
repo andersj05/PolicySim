@@ -148,7 +148,7 @@ export default function ForecastResults({ run }: { run: ForecastRun }) {
                       Validation rank {model.validation_rank} ·{' '}
                       {model.rmse_skill == null
                         ? 'Skill unavailable'
-                        : `${(model.rmse_skill * 100).toFixed(1)}% improvement`}
+                        : `${Math.abs(model.rmse_skill * 100).toFixed(1)}% ${model.rmse_skill >= 0 ? 'lower' : 'higher'} error than naive`}
                     </small>
                   )}
                 </div>
